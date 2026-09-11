@@ -21,6 +21,10 @@ ein fabrikneues EEPROM startet in Automatik. Servicebetrieb und Rampen werden na
 
 ## Anschlüsse
 
+[Anschlussplan mit Klemmentabelle](docs/wiring.md)
+
+![Anschlussplan](docs/wiring.svg)
+
 - CONTROLLINO mit 24 V DC versorgen.
 - **AO0** → 0–10-V-Steuereingang des Dimmers; dessen Signalmasse mit CONTROLLINO GND verbinden,
   soweit vom Dimmerhersteller vorgesehen. AO0 muss als Spannungsausgang konfiguriert sein (Werkseinstellung).
