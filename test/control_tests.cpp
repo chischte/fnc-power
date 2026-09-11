@@ -9,7 +9,8 @@
 TEST schedule() {
     LightControl light;
     for (uint8_t hour = 0; hour < 24; ++hour) {
-        CHECK(light.output(0, hour, true) == ((hour < 8 || hour >= 20) ? 43 : 0));
+        LightControl initial;
+        CHECK(initial.output(0, hour, true) == ((hour < 8 || hour >= 20) ? 43 : 0));
     }
     CHECK(light.output(0, 20, false) == 0);
     CHECK(light.output(0, 24, true) == 0);
@@ -23,6 +24,7 @@ TEST service_timeout() {
     CHECK(light.output(600099, 12, true) == 255);
     CHECK(light.output(600100, 12, true) == 0);
     light.handle(ButtonEvent::shortPress, 600200);
+    CHECK(light.output(1100000, 20, true) == 255);
     CHECK(light.output(1200200, 20, true) == 43);
     return 0;
 }
@@ -123,5 +125,66 @@ TEST button_rollover() {
     CHECK(button.update(true, uint32_t(start + 2030)) == ButtonEvent::longPress);
     CHECK(button.update(false, uint32_t(start + 2100)) == ButtonEvent::none);
     CHECK(button.update(false, uint32_t(start + 2130)) == ButtonEvent::none);
+    return 0;
+}
+
+TEST automatic_ramps() {
+    LightControl light;
+    CHECK(light.output(0, 19, true) == 0);
+    CHECK(light.output(100, 20, true) == 0);
+    CHECK(light.output(30100, 20, true) == 21);
+    CHECK(light.output(60099, 20, true) == 42);
+    CHECK(light.output(60100, 20, true) == 43);
+    CHECK(light.output(100000, 7, true) == 43);
+    CHECK(light.output(100100, 8, true) == 43);
+    CHECK(light.output(130100, 8, true) == 22);
+    CHECK(light.output(160099, 8, true) == 1);
+    CHECK(light.output(160100, 8, true) == 0);
+    return 0;
+}
+
+TEST automatic_ramp_overrides() {
+    LightControl light;
+    CHECK(light.output(0, 19, true) == 0);
+    light.handle(ButtonEvent::shortPress, 0);
+    CHECK(light.output(580000, 20, true) == 255);
+    CHECK(light.output(600000, 20, true) == 14);
+    CHECK(light.output(640000, 20, true) == 43);
+    light.handle(ButtonEvent::longPress, 650000);
+    CHECK(light.output(650000, 20, true) == 255);
+    CHECK(light.output(653000, 20, true) == 0);
+    CHECK(light.output(700000, 8, true) == 0);
+    light.handle(ButtonEvent::longPress, 720000);
+    CHECK(light.output(720000, 8, true) == 0);
+    CHECK(light.output(723000, 8, true) == 255);
+    CHECK(light.output(730000, 8, true) == 22);
+    CHECK(light.output(760000, 8, true) == 0);
+    return 0;
+}
+
+TEST automatic_ramp_clock_changes() {
+    LightControl light;
+    CHECK(light.output(0, 19, true) == 0);
+    CHECK(light.output(100, 20, true) == 0);
+    CHECK(light.output(30100, 20, true) == 21);
+    CHECK(light.output(30100, 12, true) == 21);
+    CHECK(light.output(60100, 12, true) == 11);
+    CHECK(light.output(90100, 12, true) == 0);
+    CHECK(light.output(100000, 20, true) == 0);
+    CHECK(light.output(130000, 20, false) == 0);
+    CHECK(light.output(130100, 20, true) == 43);
+    return 0;
+}
+
+TEST automatic_ramp_rollover() {
+    constexpr uint32_t start = UINT32_MAX - 1000;
+    LightControl light;
+    CHECK(light.output(start, 19, true) == 0);
+    CHECK(light.output(start, 20, true) == 0);
+    CHECK(light.output(uint32_t(start + 30000), 20, true) == 21);
+    CHECK(light.output(uint32_t(start + 60000), 20, true) == 43);
+    CHECK(light.output(uint32_t(start + 70000), 8, true) == 43);
+    CHECK(light.output(uint32_t(start + 100000), 8, true) == 22);
+    CHECK(light.output(uint32_t(start + 130000), 8, true) == 0);
     return 0;
 }

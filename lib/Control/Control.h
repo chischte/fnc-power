@@ -6,6 +6,7 @@ constexpr uint32_t debounceMs = 30;
 constexpr uint32_t longPressMs = 2000;
 constexpr uint32_t serviceMs = 10UL * 60 * 1000;
 constexpr uint32_t fadeMs = 3000;
+constexpr uint32_t automaticFadeMs = 60000;
 constexpr uint8_t nightPercent = 17;
 constexpr uint8_t startHour = 20;
 constexpr uint8_t endHour = 8;
@@ -46,6 +47,41 @@ private:
     uint32_t pressedAt_ = 0;
 };
 
+class AutomaticLight {
+public:
+    uint8_t output(uint32_t now, uint8_t hour, bool clockValid) {
+        if (!clockValid || hour > 23) {
+            initialized_ = false;
+            return 0;
+        }
+        const uint8_t target = hour >= Config::startHour || hour < Config::endHour
+            ? Config::nightOutput : 0;
+        if (!initialized_) {
+            initialized_ = true;
+            from_ = target_ = target;
+            startedAt_ = now;
+        }
+        if (target != target_) {
+            from_ = level(now);
+            target_ = target;
+            startedAt_ = now;
+        }
+        return level(now);
+    }
+private:
+    uint8_t level(uint32_t now) const {
+        if (from_ == target_) return target_;
+        const uint32_t elapsed = now - startedAt_;
+        if (elapsed >= Config::automaticFadeMs) return target_;
+        const int32_t difference = int32_t(target_) - from_;
+        return from_ + difference * int32_t(elapsed) / int32_t(Config::automaticFadeMs);
+    }
+    bool initialized_ = false;
+    uint8_t from_ = 0;
+    uint8_t target_ = 0;
+    uint32_t startedAt_ = 0;
+};
+
 class LightControl {
 public:
     explicit LightControl(bool disabled = false) : disabled_(disabled) {}
@@ -61,6 +97,8 @@ public:
         }
     }
     uint8_t output(uint32_t now, uint8_t hour, bool clockValid) {
+        // Keep the schedule progressing while service light or manual feedback overrides it.
+        const uint8_t automaticOutput = automatic_.output(now, hour, clockValid);
         if (fading_) {
             const uint32_t elapsed = now - startedAt_;
             if (elapsed >= Config::fadeMs) {
@@ -73,11 +111,11 @@ public:
         if (disabled_) return 0;
         if (service_ && uint32_t(now - serviceAt_) >= Config::serviceMs) service_ = false;
         if (service_) return Config::fullOutput;
-        if (!clockValid || hour > 23) return 0;
-        return hour >= Config::startHour || hour < Config::endHour ? Config::nightOutput : 0;
+        return automaticOutput;
     }
     bool disabled() const { return disabled_; }
 private:
+    AutomaticLight automatic_;
     bool disabled_;
     bool service_ = false;
     bool fading_ = false;

@@ -6,12 +6,19 @@
 
 | Aktion / Uhrzeit | Ausgang |
 | --- | --- |
-| 20:00:00 bis 07:59:59 | 17 % (ca. 1,69 V) |
-| 08:00:00 bis 19:59:59 | Aus (0 V) |
+| Ab 20:00:00 | In 60 Sekunden von 0 auf 17 %, danach 17 % (ca. 1,69 V) |
+| Ab 08:00:00 | In 60 Sekunden von 17 auf 0 %, danach Aus (0 V) |
 | Kurzer Tastendruck, beim Loslassen | 100 % für 10 Minuten, danach aktueller Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Startet die 10 Minuten erneut |
 | Langer Druck (2 Sekunden) | Dauerhaft aus; einmal 100 → 0 % in 3 Sekunden |
 | Erneuter langer Druck | Automatik; einmal 0 → 100 % in 3 Sekunden, danach aktueller Zeitplan |
+
+Die automatischen Rampen laufen auch während Servicebetrieb, dauerhaft Aus und Taster-Rückmeldungen
+im Hintergrund weiter. Nach einer Übersteuerung gilt der aktuelle Wert der Zeitplanrampe.
+Die Rückmeldungen bei langem Tastendruck dauern weiterhin 3 Sekunden.
+Beim Start oder nach Wiederherstellung einer gültigen RTC gilt sofort der aktuelle Tag-/Nacht-Sollwert.
+Ein Uhrstellen über eine Schaltgrenze startet ebenfalls eine 60-Sekunden-Rampe vom aktuellen Automatikwert.
+Der analoge Ausgang hat 8 Bit Auflösung: zwischen 0 und 17 % erfolgt die Rampe in 43 kleinen Stufen.
 
 Langes Halten löst genau einmal aus, beim Loslassen folgt kein kurzer Druck.
 Der Taster wird mit 30 ms entprellt. Dimmrampen und Servicebetrieb blockieren die Hauptschleife nicht.
@@ -89,7 +96,7 @@ pio run
 
 Die Hosttests benötigen Python und LLVM/Clang oder GCC. Sie testen den tatsächlichen C++-Code:
 Tagesverlauf, Serviceablauf/-verlängerung, Moduswechsel, Rampenendpunkte, Entprellung,
-einmalige Langerkennung und den `millis()`-Überlauf. Der Firmware-Build prüft die AVR-Integration.
+einmalige Langerkennung, die 60-Sekunden-Automatikrampen mit Übersteuerungen und den `millis()`-Überlauf. Der Firmware-Build prüft die AVR-Integration.
 Elektrische Ausgangswerte, RTC-Pufferung und Dimmerverhalten müssen am angeschlossenen Gerät geprüft werden.
 
 Zur Inbetriebnahme: Uhr auf 07:59:55 und 19:59:55 stellen und Umschaltungen beobachten;
