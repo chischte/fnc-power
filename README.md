@@ -2,6 +2,34 @@
 
 0–10-V-Lichtsteuerung für **CONTROLLINO MAXI Automation**, gebaut mit PlatformIO.
 
+## Konfiguration
+
+Die Einstellungen stehen zentral in [`include/PowerConfig.h`](include/PowerConfig.h):
+
+```cpp
+constexpr int brightnessPercent = 17;
+constexpr int maxBrightnessPercent = 100;
+constexpr int onHour = 20;
+constexpr int onMinute = 0;
+constexpr int offHour = 8;
+constexpr int offMinute = 0;
+```
+
+`brightnessPercent` ist der gewünschte Automatikwert; `maxBrightnessPercent` begrenzt
+alle Betriebsarten, einschliesslich Servicelicht und Taster-Rückmeldungen.
+Beide Angaben sind absolute Prozentwerte des 0–10-V-Bereichs: 17 % bleibt bei einem
+Maximum von 70 % weiterhin 17 %. Ein Sollwert über dem Maximum wird auf das Maximum begrenzt.
+0 % als Maximum hält den Ausgang immer auf 0 V.
+
+Zeiten sind lokale RTC-Zeiten mit Minutenauflösung. Zeitfenster tagsüber und über Mitternacht
+werden unterstützt; gleiche Ein-/Ausschaltzeiten deaktivieren die Automatik (Service bleibt verfügbar).
+Ungültige Prozentwerte, Stunden oder Minuten erzeugen beim Build eine Fehlermeldung.
+Die automatischen Übergänge dauern weiterhin 60 Sekunden.
+
+Nach Änderungen `pio run -t upload --upload-port COM5` ausführen (Port anpassen).
+Die Werte sind Build-Konfiguration und werden nicht zur Laufzeit vom Gerät aus einer Datei gelesen.
+Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
+
 ## Verhalten
 
 | Aktion / Uhrzeit | Ausgang |
@@ -84,7 +112,7 @@ Die RTC-Pufferung ist zeitlich begrenzt; nach längerer stromloser Lagerung die 
 
 ## Aufbau und Tests
 
-- `lib/Control/Control.h`: hardwareunabhängige Taster- und Lichtlogik; Zeiten/Helligkeit in `Config`.
+- `lib/Control/Control.h`: hardwareunabhängige Taster- und Lichtlogik; Bedienzeiten in `Config`, Benutzereinstellungen in `include/PowerConfig.h`.
 - `src/RtcClock.cpp`: SPI-Zugriff auf die RTC, Kalenderprüfung und Uhrstellen.
 - `src/SerialClock.cpp`: begrenzter, nicht wartender serieller Befehlsparser.
 - `src/main.cpp`: Anschlüsse, EEPROM und Zusammenführung der Module.

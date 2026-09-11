@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <PowerConfig.h>
 
 namespace Config {
 constexpr uint32_t debounceMs = 30;
@@ -7,11 +8,21 @@ constexpr uint32_t longPressMs = 2000;
 constexpr uint32_t serviceMs = 10UL * 60 * 1000;
 constexpr uint32_t fadeMs = 3000;
 constexpr uint32_t automaticFadeMs = 60000;
-constexpr uint8_t nightPercent = 17;
-constexpr uint8_t startHour = 20;
-constexpr uint8_t endHour = 8;
-constexpr uint8_t fullOutput = 255;
-constexpr uint8_t nightOutput = (fullOutput * uint16_t(nightPercent) + 50) / 100;
+constexpr uint16_t minutesPerHour = 60;
+constexpr uint8_t outputRange = 255;
+constexpr uint8_t percentOutput(int percent, int maximum) {
+    return (outputRange * uint16_t(percent < maximum ? percent : maximum) + 50) / 100;
+}
+constexpr uint8_t fullOutput = percentOutput(PowerConfig::maxBrightnessPercent, 100);
+constexpr uint8_t nightOutput = percentOutput(PowerConfig::brightnessPercent,
+                                             PowerConfig::maxBrightnessPercent);
+constexpr uint16_t onTime = PowerConfig::onHour * minutesPerHour + PowerConfig::onMinute;
+constexpr uint16_t offTime = PowerConfig::offHour * minutesPerHour + PowerConfig::offMinute;
+
+constexpr bool isScheduledOn(uint16_t time, uint16_t on, uint16_t off) {
+    return on < off ? time >= on && time < off
+                    : on > off && (time >= on || time < off);
+}
 }
 
 enum class ButtonEvent { none, shortPress, longPress };
@@ -49,12 +60,13 @@ private:
 
 class AutomaticLight {
 public:
-    uint8_t output(uint32_t now, uint8_t hour, bool clockValid) {
-        if (!clockValid || hour > 23) {
+    uint8_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
+        if (!clockValid || hour > 23 || minute > 59) {
             initialized_ = false;
             return 0;
         }
-        const uint8_t target = hour >= Config::startHour || hour < Config::endHour
+        const uint16_t time = hour * Config::minutesPerHour + minute;
+        const uint8_t target = Config::isScheduledOn(time, Config::onTime, Config::offTime)
             ? Config::nightOutput : 0;
         if (!initialized_) {
             initialized_ = true;
@@ -96,9 +108,9 @@ public:
             serviceAt_ = now;
         }
     }
-    uint8_t output(uint32_t now, uint8_t hour, bool clockValid) {
+    uint8_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
         // Keep the schedule progressing while service light or manual feedback overrides it.
-        const uint8_t automaticOutput = automatic_.output(now, hour, clockValid);
+        const uint8_t automaticOutput = automatic_.output(now, hour, clockValid, minute);
         if (fading_) {
             const uint32_t elapsed = now - startedAt_;
             if (elapsed >= Config::fadeMs) {

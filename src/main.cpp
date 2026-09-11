@@ -37,7 +37,7 @@ public:
             EEPROM.update(modeAddress, control_.disabled() ? disabledMarker : automaticMarker);
             Serial.println(control_.disabled() ? F("MODE OFF") : F("MODE AUTO"));
         }
-        analogWrite(dimmerPin, control_.output(now, hour_, clockValid_));
+        analogWrite(dimmerPin, control_.output(now, hour_, clockValid_, minute_));
     }
 private:
     void refreshClock() {
@@ -48,7 +48,10 @@ private:
         }
         clockChecked_ = true;
         clockValid_ = valid;
-        if (valid) hour_ = time.hour;
+        if (valid) {
+            hour_ = time.hour;
+            minute_ = time.minute;
+        }
     }
     Button button_;
     LightControl control_;
@@ -56,6 +59,7 @@ private:
     SerialClock serial_{clock_};
     uint32_t clockAt_ = 0;
     uint8_t hour_ = 0;
+    uint8_t minute_ = 0;
     bool clockValid_ = false;
     bool clockChecked_ = false;
 };

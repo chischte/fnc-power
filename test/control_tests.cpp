@@ -188,3 +188,31 @@ TEST automatic_ramp_rollover() {
     CHECK(light.output(uint32_t(start + 130000), 8, true) == 0);
     return 0;
 }
+
+TEST configurable_schedule() {
+    CHECK(Config::isScheduledOn(390, 390, 1125));
+    CHECK(!Config::isScheduledOn(389, 390, 1125));
+    CHECK(Config::isScheduledOn(1124, 390, 1125));
+    CHECK(!Config::isScheduledOn(1125, 390, 1125));
+    CHECK(!Config::isScheduledOn(0, 390, 1125));
+    CHECK(Config::isScheduledOn(0, 1230, 495));
+    CHECK(!Config::isScheduledOn(1229, 1230, 495));
+    CHECK(Config::isScheduledOn(1230, 1230, 495));
+    CHECK(Config::isScheduledOn(494, 1230, 495));
+    CHECK(!Config::isScheduledOn(495, 1230, 495));
+    for (uint16_t minute = 0; minute < 1440; ++minute)
+        CHECK(!Config::isScheduledOn(minute, 480, 480));
+    LightControl light;
+    CHECK(light.output(0, 20, true, 60) == 0);
+    return 0;
+}
+
+TEST brightness_limit() {
+    CHECK(Config::percentOutput(17, 100) == 43);
+    CHECK(Config::percentOutput(17, 70) == 43);
+    CHECK(Config::percentOutput(80, 70) == 179);
+    CHECK(Config::percentOutput(100, 100) == 255);
+    CHECK(Config::percentOutput(100, 0) == 0);
+    CHECK(Config::percentOutput(0, 100) == 0);
+    return 0;
+}
