@@ -63,11 +63,12 @@ public:
     uint8_t output(uint32_t now, uint8_t hour, bool clockValid) {
         if (fading_) {
             const uint32_t elapsed = now - startedAt_;
-            if (elapsed <= Config::fadeMs) {
-                const uint8_t level = elapsed * Config::fullOutput / Config::fadeMs;
-                return disabled_ ? Config::fullOutput - level : level;
+            if (elapsed >= Config::fadeMs) {
+                fading_ = false;
+                return disabled_ ? 0 : Config::fullOutput;
             }
-            fading_ = false;
+            const uint8_t level = elapsed * Config::fullOutput / Config::fadeMs;
+            return disabled_ ? Config::fullOutput - level : level;
         }
         if (disabled_) return 0;
         if (service_ && uint32_t(now - serviceAt_) >= Config::serviceMs) service_ = false;
