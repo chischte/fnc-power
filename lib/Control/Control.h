@@ -104,8 +104,8 @@ public:
             fading_ = true;
             startedAt_ = now;
         } else if (event == ButtonEvent::shortPress && !disabled_ && !fading_) {
-            service_ = true;
-            serviceAt_ = now;
+            service_ = !service_ || uint32_t(now - serviceAt_) >= Config::serviceMs;
+            if (service_) serviceAt_ = now;
         }
     }
     uint8_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {

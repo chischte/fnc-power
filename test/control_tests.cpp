@@ -29,13 +29,13 @@ TEST service_timeout() {
     return 0;
 }
 
-TEST service_restart_and_boundaries() {
+TEST service_toggle_and_boundaries() {
     LightControl light;
     light.handle(ButtonEvent::shortPress, 0);
     CHECK(light.output(100, 7, true) == 255);
     CHECK(light.output(200, 8, true) == 255);
     light.handle(ButtonEvent::shortPress, 500000);
-    CHECK(light.output(600000, 8, true) == 255);
+    CHECK(light.output(500000, 8, true) == 0);
     CHECK(light.output(1100000, 8, true) == 0);
     light.handle(ButtonEvent::shortPress, 1200000);
     CHECK(light.output(1200001, 0, false) == 255);
@@ -214,5 +214,43 @@ TEST brightness_limit() {
     CHECK(Config::percentOutput(100, 100) == 255);
     CHECK(Config::percentOutput(100, 0) == 0);
     CHECK(Config::percentOutput(0, 100) == 0);
+    return 0;
+}
+
+TEST service_toggle_at_night() {
+    LightControl light;
+    CHECK(light.output(0, 20, true) == 43);
+    light.handle(ButtonEvent::shortPress, 100);
+    CHECK(light.output(100, 20, true) == 255);
+    light.handle(ButtonEvent::shortPress, 200);
+    CHECK(light.output(200, 20, true) == 43);
+    light.handle(ButtonEvent::shortPress, 300);
+    CHECK(light.output(600299, 20, true) == 255);
+    CHECK(light.output(600300, 20, true) == 43);
+    return 0;
+}
+
+TEST service_toggle_during_ramp() {
+    LightControl light;
+    CHECK(light.output(0, 19, true) == 0);
+    light.handle(ButtonEvent::shortPress, 100);
+    CHECK(light.output(100, 20, true) == 255);
+    light.handle(ButtonEvent::shortPress, 30100);
+    CHECK(light.output(30100, 20, true) == 21);
+    CHECK(light.output(60100, 20, true) == 43);
+    return 0;
+}
+
+TEST service_press_at_expiry() {
+    constexpr uint32_t start = UINT32_MAX - 1000;
+    LightControl light;
+    light.handle(ButtonEvent::shortPress, start);
+    CHECK(light.output(start, 12, true) == 255);
+    // handle() runs before output() in the application, including at the deadline.
+    const uint32_t deadline = start + Config::serviceMs;
+    light.handle(ButtonEvent::shortPress, deadline);
+    CHECK(light.output(deadline, 12, true) == 255);
+    light.handle(ButtonEvent::shortPress, uint32_t(deadline + 100));
+    CHECK(light.output(uint32_t(deadline + 100), 12, true) == 0);
     return 0;
 }
