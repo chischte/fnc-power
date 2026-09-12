@@ -4,6 +4,8 @@
 namespace PowerConfig {
 // Absolute Prozentwerte des 0–10-V-Ausgangs; 100 % entsprechen 10 V.
 constexpr int brightnessPercent = 17;
+// Helligkeit bei kurzem Tastendruck, ebenfalls durch das Maximum begrenzt.
+constexpr int serviceBrightnessPercent = 80;
 // Obergrenze für Automatik, Servicelicht und Taster-Rückmeldungen.
 constexpr int maxBrightnessPercent = 100;
 
@@ -15,6 +17,8 @@ constexpr int offMinute = 0;
 
 static_assert(brightnessPercent >= 0 && brightnessPercent <= 100,
               "brightnessPercent must be between 0 and 100");
+static_assert(serviceBrightnessPercent >= 0 && serviceBrightnessPercent <= 100,
+              "serviceBrightnessPercent must be between 0 and 100");
 static_assert(maxBrightnessPercent >= 0 && maxBrightnessPercent <= 100,
               "maxBrightnessPercent must be between 0 and 100");
 static_assert(onHour >= 0 && onHour <= 23 && offHour >= 0 && offHour <= 23,

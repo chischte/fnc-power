@@ -17,6 +17,8 @@ constexpr uint8_t outputRange = 255;
 constexpr uint8_t percentOutput(int percent, int maximum) {
     return (outputRange * uint16_t(percent < maximum ? percent : maximum) + 50) / 100;
 }
+constexpr uint8_t serviceOutput = percentOutput(PowerConfig::serviceBrightnessPercent,
+                                               PowerConfig::maxBrightnessPercent);
 constexpr uint8_t fullOutput = percentOutput(PowerConfig::maxBrightnessPercent, 100);
 constexpr uint8_t nightOutput = percentOutput(PowerConfig::brightnessPercent,
                                              PowerConfig::maxBrightnessPercent);
@@ -167,7 +169,7 @@ private:
         if (feedback_.active()) return feedback_.output(now, automaticOutput);
         if (disabled_) return 0;
         if (service_ && uint32_t(now - serviceAt_) >= Config::serviceMs) service_ = false;
-        return service_ ? Config::fullOutput : automaticOutput;
+        return service_ ? Config::serviceOutput : automaticOutput;
     }
     AutomaticLight automatic_;
     FeedbackRamp feedback_;

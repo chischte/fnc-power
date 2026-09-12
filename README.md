@@ -8,6 +8,7 @@ Die Einstellungen stehen zentral in [`include/PowerConfig.h`](include/PowerConfi
 
 ```cpp
 constexpr int brightnessPercent = 17;
+constexpr int serviceBrightnessPercent = 80;
 constexpr int maxBrightnessPercent = 100;
 constexpr int onHour = 20;
 constexpr int onMinute = 0;
@@ -15,9 +16,9 @@ constexpr int offHour = 8;
 constexpr int offMinute = 0;
 ```
 
-`brightnessPercent` ist der gewünschte Automatikwert; `maxBrightnessPercent` begrenzt
+`brightnessPercent` ist der gewünschte Automatikwert, `serviceBrightnessPercent` die Servicehelligkeit; `maxBrightnessPercent` begrenzt
 alle Betriebsarten, einschliesslich Servicelicht und Taster-Rückmeldungen.
-Beide Angaben sind absolute Prozentwerte des 0–10-V-Bereichs: 17 % bleibt bei einem
+Alle Helligkeitsangaben sind absolute Prozentwerte des 0–10-V-Bereichs: 17 % bleibt bei einem
 Maximum von 70 % weiterhin 17 %. Ein Sollwert über dem Maximum wird auf das Maximum begrenzt.
 0 % als Maximum hält den Ausgang immer auf 0 V.
 
@@ -36,7 +37,7 @@ Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 | --- | --- |
 | Ab 20:00:00 | In 60 Sekunden von 0 auf 17 %, danach 17 % (ca. 1,69 V) |
 | Ab 08:00:00 | In 60 Sekunden von 17 auf 0 %, danach Aus (0 V) |
-| Kurzer Tastendruck, beim Loslassen | 100 % für 10 Minuten, danach aktueller Zeitplan |
+| Kurzer Tastendruck, beim Loslassen | 80 % für 10 Minuten, danach aktueller Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Beendet das Servicelicht sofort; zurück zum aktuellen Automatikwert |
 | Langer Druck (1,5 Sekunden) | Dauerhaft aus; in 0,5 s auf Maximum, dann in 5 s auf 0 % |
 | Erneuter langer Druck | Automatik; in 5 s von 0 auf Maximum, zweimal kurz blinken, dann in 0,5 s zum aktuellen Automatikwert |
