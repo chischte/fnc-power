@@ -111,14 +111,14 @@ TEST button_long_once() {
     Button button;
     CHECK(button.update(true, 0) == ButtonEvent::none);
     CHECK(button.update(true, 30) == ButtonEvent::none);
-    CHECK(button.update(true, 1529) == ButtonEvent::none);
-    CHECK(button.update(true, 1530) == ButtonEvent::longPress);
+    CHECK(button.update(true, 1279) == ButtonEvent::none);
+    CHECK(button.update(true, 1280) == ButtonEvent::longPress);
     CHECK(button.update(true, 10000) == ButtonEvent::none);
     CHECK(button.update(false, 11000) == ButtonEvent::none);
     CHECK(button.update(false, 11030) == ButtonEvent::none);
     CHECK(button.update(true, 12000) == ButtonEvent::none);
     CHECK(button.update(true, 12030) == ButtonEvent::none);
-    CHECK(button.update(true, 13530) == ButtonEvent::longPress);
+    CHECK(button.update(true, 13280) == ButtonEvent::longPress);
     return 0;
 }
 
@@ -127,7 +127,7 @@ TEST button_rollover() {
     constexpr uint32_t start = UINT32_MAX - 15;
     CHECK(button.update(true, start) == ButtonEvent::none);
     CHECK(button.update(true, uint32_t(start + 30)) == ButtonEvent::none);
-    CHECK(button.update(true, uint32_t(start + 1530)) == ButtonEvent::longPress);
+    CHECK(button.update(true, uint32_t(start + 1280)) == ButtonEvent::longPress);
     CHECK(button.update(false, uint32_t(start + 2100)) == ButtonEvent::none);
     CHECK(button.update(false, uint32_t(start + 2130)) == ButtonEvent::none);
     return 0;
@@ -372,5 +372,37 @@ TEST service_ramp_cancel_and_rollover() {
     light.handle(ButtonEvent::shortPress, uint32_t(start + 1100));
     CHECK(light.output(uint32_t(start + 2100), 20, true) == 123);
     CHECK(light.output(uint32_t(start + 3100), 20, true) == 204);
+    return 0;
+}
+
+TEST button_enable_threshold() {
+    Button button;
+    CHECK(button.update(true, 0, Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 30, Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 779, Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 780, Config::enableLongPressMs) == ButtonEvent::longPress);
+    CHECK(button.update(true, 1280, Config::disableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(false, 1500, Config::disableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(false, 1530, Config::disableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 2000, Config::disableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 2030, Config::disableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 2780, Config::disableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 3279, Config::disableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, 3280, Config::disableLongPressMs) == ButtonEvent::longPress);
+    return 0;
+}
+
+TEST button_enable_rollover_and_short_press() {
+    Button button;
+    constexpr uint32_t start = UINT32_MAX - 100;
+    CHECK(button.update(true, start, Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, uint32_t(start + 30), Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, uint32_t(start + 779), Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(button.update(true, uint32_t(start + 780), Config::enableLongPressMs) == ButtonEvent::longPress);
+    Button shortButton;
+    CHECK(shortButton.update(true, 0, Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(shortButton.update(true, 30, Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(shortButton.update(false, 700, Config::enableLongPressMs) == ButtonEvent::none);
+    CHECK(shortButton.update(false, 730, Config::enableLongPressMs) == ButtonEvent::shortPress);
     return 0;
 }

@@ -39,8 +39,8 @@ Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 | Ab 08:00:00 | In 60 Sekunden von 17 auf 0 %, danach Aus (0 V) |
 | Kurzer Tastendruck, beim Loslassen | In 2 s vom aktuellen Wert auf 80 %, nach 10 Minuten zurück zum Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Beendet das Servicelicht sofort; zurück zum aktuellen Automatikwert |
-| Langer Druck (1,5 Sekunden) | Dauerhaft aus; sofort auf Maximum, dann in 5 s auf 0 % |
-| Erneuter langer Druck | Automatik; in 5 s von 0 auf Maximum, dreimal kurz blinken, dann in 0,4 s zum aktuellen Automatikwert |
+| Langer Druck (1,25 Sekunden) | Dauerhaft aus; sofort auf Maximum, dann in 5 s auf 0 % |
+| Erneuter langer Druck (0,75 Sekunden) | Automatik; in 5 s von 0 auf Maximum, dreimal kurz blinken, dann in 0,4 s zum aktuellen Automatikwert |
 
 Die 10 Minuten Servicezeit beginnen mit dem kurzen Tastendruck und enthalten die 2-Sekunden-Rampe.
 Erneuter kurzer Druck bricht auch eine laufende Service-Rampe ab; Rückkehr und Zeitablauf erfolgen ohne Rampe.
@@ -54,7 +54,8 @@ mit jeweils 300 ms Aus und 300 ms auf Maximalhelligkeit (standardmässig 100 %).
 Beim Deaktivieren gibt es keine Blinkimpulse.
 Ein erneuter langer Druck während der Rückmeldung startet vom zuletzt ausgegebenen Wert;
 beim Aktivieren wird der neue Rampenstart bei Bedarf in 0,4 Sekunden erreicht,
-beim Deaktivieren wird sofort auf Maximum geschaltet. Longpress bleibt bei 1,5 Sekunden.
+beim Deaktivieren wird sofort auf Maximum geschaltet. Longpress: 0,75 Sekunden zum Aktivieren und 1,25 Sekunden zum Deaktivieren der Automatik.
+Die Haltezeit beginnt nach der 30-ms-Entprellung; langes Halten schaltet nur einmal pro Tastendruck.
 Beim Start oder nach Wiederherstellung einer gültigen RTC gilt sofort der aktuelle Tag-/Nacht-Sollwert.
 Ein Uhrstellen über eine Schaltgrenze startet ebenfalls eine 60-Sekunden-Rampe vom aktuellen Automatikwert.
 Der analoge Ausgang hat 8 Bit Auflösung: zwischen 0 und 17 % erfolgt die Rampe in 43 kleinen Stufen.

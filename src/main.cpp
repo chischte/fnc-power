@@ -31,7 +31,9 @@ public:
             clockAt_ = now;
             refreshClock();
         }
-        const ButtonEvent event = button_.update(digitalRead(buttonPin) == HIGH, now);
+        const uint32_t longPressMs = control_.disabled()
+            ? Config::enableLongPressMs : Config::disableLongPressMs;
+        const ButtonEvent event = button_.update(digitalRead(buttonPin) == HIGH, now, longPressMs);
         control_.handle(event, now);
         if (event == ButtonEvent::longPress) {
             EEPROM.update(modeAddress, control_.disabled() ? disabledMarker : automaticMarker);

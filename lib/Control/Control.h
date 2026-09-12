@@ -4,7 +4,8 @@
 
 namespace Config {
 constexpr uint32_t debounceMs = 30;
-constexpr uint32_t longPressMs = 1500;
+constexpr uint32_t enableLongPressMs = 750;
+constexpr uint32_t disableLongPressMs = 1250;
 constexpr uint32_t serviceFadeMs = 2000;
 constexpr uint32_t serviceMs = 10UL * 60 * 1000;
 constexpr uint32_t fadeMs = 5000;
@@ -36,7 +37,8 @@ enum class ButtonEvent { none, shortPress, longPress };
 
 class Button {
 public:
-    ButtonEvent update(bool pressed, uint32_t now) {
+    ButtonEvent update(bool pressed, uint32_t now,
+                       uint32_t longPressMs = Config::disableLongPressMs) {
         if (pressed != raw_) {
             raw_ = pressed;
             changedAt_ = now;
@@ -45,13 +47,14 @@ public:
             stable_ = raw_;
             if (stable_) {
                 pressedAt_ = now;
+                longPressMs_ = longPressMs;
                 longReported_ = false;
             } else if (!longReported_) {
                 return ButtonEvent::shortPress;
             }
         }
         if (stable_ && raw_ && !longReported_ &&
-            uint32_t(now - pressedAt_) >= Config::longPressMs) {
+            uint32_t(now - pressedAt_) >= longPressMs_) {
             longReported_ = true;
             return ButtonEvent::longPress;
         }
@@ -63,6 +66,7 @@ private:
     bool longReported_ = false;
     uint32_t changedAt_ = 0;
     uint32_t pressedAt_ = 0;
+    uint32_t longPressMs_ = Config::disableLongPressMs;
 };
 
 class AutomaticLight {
