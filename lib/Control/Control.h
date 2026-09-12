@@ -9,7 +9,7 @@ constexpr uint32_t serviceMs = 10UL * 60 * 1000;
 constexpr uint32_t fadeMs = 5000;
 constexpr uint32_t feedbackTransitionMs = 400;
 constexpr uint32_t feedbackBlinkMs = 200;
-constexpr uint8_t feedbackBlinkCount = 2;
+constexpr uint8_t feedbackBlinkCount = 3;
 constexpr uint32_t feedbackBlinkSequenceMs = feedbackBlinkMs * (1 + 2 * feedbackBlinkCount);
 constexpr uint32_t automaticFadeMs = 60000;
 constexpr uint16_t minutesPerHour = 60;
@@ -107,8 +107,7 @@ public:
         from_ = currentOutput;
         startedAt_ = now;
         active_ = true;
-        const uint8_t initial = disabling ? Config::fullOutput : 0;
-        preparationMs_ = currentOutput == initial ? 0 : Config::feedbackTransitionMs;
+        preparationMs_ = !disabling && currentOutput != 0 ? Config::feedbackTransitionMs : 0;
     }
     bool active() const { return active_; }
     uint8_t output(uint32_t now, uint8_t automaticOutput) {
@@ -122,7 +121,7 @@ public:
             return interpolate(initial, final, elapsed, Config::fadeMs);
         elapsed -= Config::fadeMs;
         if (!disabling_) {
-            // Hold the ramp peak, then show two distinct off/on pulses.
+            // Hold the ramp peak, then show distinct off/on pulses.
             if (elapsed < Config::feedbackBlinkSequenceMs)
                 return (elapsed / Config::feedbackBlinkMs) % 2 == 0 ? Config::fullOutput : 0;
             elapsed -= Config::feedbackBlinkSequenceMs;

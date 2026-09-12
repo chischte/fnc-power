@@ -49,11 +49,9 @@ TEST disable_and_enable() {
     CHECK(light.output(0, 20, true) == 204);
     light.handle(ButtonEvent::longPress, 100);
     CHECK(light.disabled());
-    CHECK(light.output(100, 20, true) == 204);
-    CHECK(light.output(300, 20, true) == 229);
-    CHECK(light.output(500, 20, true) == 255);
-    CHECK(light.output(3000, 20, true) == 128);
-    CHECK(light.output(5505, 20, true) == 0);
+    CHECK(light.output(100, 20, true) == 255);
+    CHECK(light.output(2600, 20, true) == 128);
+    CHECK(light.output(5100, 20, true) == 0);
     light.handle(ButtonEvent::shortPress, 6000);
     CHECK(light.output(6000, 20, true) == 0);
     light.handle(ButtonEvent::longPress, 7000);
@@ -61,8 +59,8 @@ TEST disable_and_enable() {
     CHECK(light.output(7000, 20, true) == 0);
     CHECK(light.output(9500, 20, true) == 127);
     CHECK(light.output(12000, 20, true) == 255);
-    CHECK(light.output(13200, 20, true) == 149);
-    CHECK(light.output(13400, 20, true) == 43);
+    CHECK(light.output(13600, 20, true) == 149);
+    CHECK(light.output(13800, 20, true) == 43);
     LightControl restored(true);
     CHECK(restored.output(0, 20, true) == 0);
     return 0;
@@ -74,9 +72,9 @@ TEST enable_during_day() {
     CHECK(light.output(0, 12, true) == 0);
     light.handle(ButtonEvent::shortPress, 1000);
     CHECK(light.output(5000, 12, true) == 255);
-    CHECK(light.output(6200, 12, true) == 128);
-    light.handle(ButtonEvent::shortPress, 6200);
-    CHECK(light.output(6400, 12, true) == 0);
+    CHECK(light.output(6600, 12, true) == 128);
+    light.handle(ButtonEvent::shortPress, 6600);
+    CHECK(light.output(6800, 12, true) == 0);
     return 0;
 }
 
@@ -87,10 +85,9 @@ TEST timer_rollover() {
     CHECK(light.output(uint32_t(start + 599999), 12, true) == 204);
     CHECK(light.output(uint32_t(start + 600000), 12, true) == 0);
     light.handle(ButtonEvent::longPress, start);
-    CHECK(light.output(uint32_t(start + 200), 12, true) == 127);
-    CHECK(light.output(uint32_t(start + 400), 12, true) == 255);
-    CHECK(light.output(uint32_t(start + 2900), 12, true) == 128);
-    CHECK(light.output(uint32_t(start + 5400), 12, true) == 0);
+    CHECK(light.output(start, 12, true) == 255);
+    CHECK(light.output(uint32_t(start + 2500), 12, true) == 128);
+    CHECK(light.output(uint32_t(start + 5000), 12, true) == 0);
     return 0;
 }
 
@@ -159,10 +156,9 @@ TEST automatic_ramp_overrides() {
     CHECK(light.output(600000, 20, true) == 14);
     CHECK(light.output(640000, 20, true) == 43);
     light.handle(ButtonEvent::longPress, 650000);
-    CHECK(light.output(650000, 20, true) == 43);
-    CHECK(light.output(650200, 20, true) == 149);
-    CHECK(light.output(650400, 20, true) == 255);
-    CHECK(light.output(655400, 20, true) == 0);
+    CHECK(light.output(650000, 20, true) == 255);
+    CHECK(light.output(652500, 20, true) == 128);
+    CHECK(light.output(655000, 20, true) == 0);
     CHECK(light.output(700000, 8, true) == 0);
     light.handle(ButtonEvent::longPress, 720000);
     CHECK(light.output(720000, 8, true) == 0);
@@ -269,29 +265,25 @@ TEST feedback_from_daylight_off() {
     LightControl light;
     CHECK(light.output(0, 12, true) == 0);
     light.handle(ButtonEvent::longPress, 100);
-    CHECK(light.output(100, 12, true) == 0);
-    CHECK(light.output(300, 12, true) == 127);
-    CHECK(light.output(500, 12, true) == 255);
-    CHECK(light.output(3000, 12, true) == 128);
-    CHECK(light.output(5500, 12, true) == 0);
+    CHECK(light.output(100, 12, true) == 255);
+    CHECK(light.output(2600, 12, true) == 128);
+    CHECK(light.output(5100, 12, true) == 0);
     CHECK(light.disabled());
     return 0;
 }
 
-TEST feedback_restart_is_continuous() {
+TEST feedback_restart() {
     LightControl light(true);
     light.handle(ButtonEvent::longPress, 0);
     CHECK(light.output(2500, 20, true) == 127);
     light.handle(ButtonEvent::longPress, 2500);
-    CHECK(light.output(2500, 20, true) == 127);
-    CHECK(light.output(2700, 20, true) == 191);
-    CHECK(light.output(2900, 20, true) == 255);
-    CHECK(light.output(5400, 20, true) == 128);
-    light.handle(ButtonEvent::longPress, 5400);
-    CHECK(light.output(5400, 20, true) == 128);
-    CHECK(light.output(5600, 20, true) == 64);
-    CHECK(light.output(5800, 20, true) == 0);
-    CHECK(light.output(10800, 20, true) == 255);
+    CHECK(light.output(2500, 20, true) == 255);
+    CHECK(light.output(5000, 20, true) == 128);
+    light.handle(ButtonEvent::longPress, 5000);
+    CHECK(light.output(5000, 20, true) == 128);
+    CHECK(light.output(5200, 20, true) == 64);
+    CHECK(light.output(5400, 20, true) == 0);
+    CHECK(light.output(10400, 20, true) == 255);
     CHECK(light.output(12200, 20, true) == 43);
     return 0;
 }
@@ -302,13 +294,13 @@ TEST feedback_return_tracks_automatic_ramp() {
     light.handle(ButtonEvent::longPress, 0);
     CHECK(light.output(0, 20, true) == 0);
     CHECK(light.output(5000, 20, true) == 255);
-    CHECK(light.output(6200, 20, true) == 130);
-    CHECK(light.output(6400, 20, true) == 4);
+    CHECK(light.output(6600, 20, true) == 130);
+    CHECK(light.output(6800, 20, true) == 4);
     CHECK(light.output(60000, 20, true) == 43);
     return 0;
 }
 
-TEST enable_blinks_twice() {
+TEST enable_blinks_three_times() {
     LightControl light(true);
     light.handle(ButtonEvent::longPress, 0);
     CHECK(light.output(4999, 20, true) == 254);
@@ -322,9 +314,13 @@ TEST enable_blinks_twice() {
     CHECK(light.output(5799, 20, true) == 0);
     CHECK(light.output(5800, 20, true) == 255);
     CHECK(light.output(5999, 20, true) == 255);
-    CHECK(light.output(6000, 20, true) == 255);
-    CHECK(light.output(6200, 20, true) == 149);
-    CHECK(light.output(6400, 20, true) == 43);
+    CHECK(light.output(6000, 20, true) == 0);
+    CHECK(light.output(6199, 20, true) == 0);
+    CHECK(light.output(6200, 20, true) == 255);
+    CHECK(light.output(6399, 20, true) == 255);
+    CHECK(light.output(6400, 20, true) == 255);
+    CHECK(light.output(6600, 20, true) == 149);
+    CHECK(light.output(6800, 20, true) == 43);
     CHECK(light.output(10000, 20, true) == 43);
     return 0;
 }
@@ -338,7 +334,7 @@ TEST enable_blinks_across_rollover() {
     CHECK(light.output(uint32_t(start + 5400), 12, true) == 255);
     CHECK(light.output(uint32_t(start + 5600), 12, true) == 0);
     CHECK(light.output(uint32_t(start + 5800), 12, true) == 255);
-    CHECK(light.output(uint32_t(start + 6200), 12, true) == 128);
-    CHECK(light.output(uint32_t(start + 6400), 12, true) == 0);
+    CHECK(light.output(uint32_t(start + 6600), 12, true) == 128);
+    CHECK(light.output(uint32_t(start + 6800), 12, true) == 0);
     return 0;
 }

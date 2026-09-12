@@ -39,18 +39,19 @@ Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 | Ab 08:00:00 | In 60 Sekunden von 17 auf 0 %, danach Aus (0 V) |
 | Kurzer Tastendruck, beim Loslassen | 80 % für 10 Minuten, danach aktueller Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Beendet das Servicelicht sofort; zurück zum aktuellen Automatikwert |
-| Langer Druck (1,5 Sekunden) | Dauerhaft aus; in 0,4 s auf Maximum, dann in 5 s auf 0 % |
-| Erneuter langer Druck | Automatik; in 5 s von 0 auf Maximum, zweimal kurz blinken, dann in 0,4 s zum aktuellen Automatikwert |
+| Langer Druck (1,5 Sekunden) | Dauerhaft aus; sofort auf Maximum, dann in 5 s auf 0 % |
+| Erneuter langer Druck | Automatik; in 5 s von 0 auf Maximum, dreimal kurz blinken, dann in 0,4 s zum aktuellen Automatikwert |
 
 Die automatischen Rampen laufen auch während Servicebetrieb, dauerhaft Aus und Taster-Rückmeldungen
 im Hintergrund weiter. Nach einer Übersteuerung gilt der aktuelle Wert der Zeitplanrampe.
 Die lange Rückmelderampe dauert 5 Sekunden; die kurzen Übergänge davor bzw. danach dauern
 0,4 Sekunden. Bereits erreichte Startwerte benötigen keinen vorbereitenden Übergang.
-Beim Aktivieren wird das Rampenmaximum zunächst 200 ms gehalten; danach folgen zwei Blinkimpulse
+Beim Aktivieren wird das Rampenmaximum zunächst 200 ms gehalten; danach folgen drei Blinkimpulse
 mit jeweils 200 ms Aus und 200 ms auf Maximalhelligkeit (standardmässig 100 %).
 Beim Deaktivieren gibt es keine Blinkimpulse.
 Ein erneuter langer Druck während der Rückmeldung startet vom zuletzt ausgegebenen Wert;
-der neue Rampenstart wird bei Bedarf in 0,4 Sekunden erreicht. Longpress bleibt bei 1,5 Sekunden.
+beim Aktivieren wird der neue Rampenstart bei Bedarf in 0,4 Sekunden erreicht,
+beim Deaktivieren wird sofort auf Maximum geschaltet. Longpress bleibt bei 1,5 Sekunden.
 Beim Start oder nach Wiederherstellung einer gültigen RTC gilt sofort der aktuelle Tag-/Nacht-Sollwert.
 Ein Uhrstellen über eine Schaltgrenze startet ebenfalls eine 60-Sekunden-Rampe vom aktuellen Automatikwert.
 Der analoge Ausgang hat 8 Bit Auflösung: zwischen 0 und 17 % erfolgt die Rampe in 43 kleinen Stufen.
