@@ -38,12 +38,12 @@ Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 | Ab 08:00:00 | In 60 Sekunden von 17 auf 0 %, danach Aus (0 V) |
 | Kurzer Tastendruck, beim Loslassen | 100 % für 10 Minuten, danach aktueller Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Beendet das Servicelicht sofort; zurück zum aktuellen Automatikwert |
-| Langer Druck (2 Sekunden) | Dauerhaft aus; einmal 100 → 0 % in 3 Sekunden |
-| Erneuter langer Druck | Automatik; einmal 0 → 100 % in 3 Sekunden, danach aktueller Zeitplan |
+| Langer Druck (1,5 Sekunden) | Dauerhaft aus; einmal 100 → 0 % in 5 Sekunden |
+| Erneuter langer Druck | Automatik; einmal 0 → 100 % in 5 Sekunden, danach aktueller Zeitplan |
 
 Die automatischen Rampen laufen auch während Servicebetrieb, dauerhaft Aus und Taster-Rückmeldungen
 im Hintergrund weiter. Nach einer Übersteuerung gilt der aktuelle Wert der Zeitplanrampe.
-Die Rückmeldungen bei langem Tastendruck dauern weiterhin 3 Sekunden.
+Die Rückmeldungen bei langem Tastendruck dauern weiterhin 5 Sekunden.
 Beim Start oder nach Wiederherstellung einer gültigen RTC gilt sofort der aktuelle Tag-/Nacht-Sollwert.
 Ein Uhrstellen über eine Schaltgrenze startet ebenfalls eine 60-Sekunden-Rampe vom aktuellen Automatikwert.
 Der analoge Ausgang hat 8 Bit Auflösung: zwischen 0 und 17 % erfolgt die Rampe in 43 kleinen Stufen.

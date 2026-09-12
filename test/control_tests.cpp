@@ -49,16 +49,16 @@ TEST disable_and_enable() {
     light.handle(ButtonEvent::longPress, 100);
     CHECK(light.disabled());
     CHECK(light.output(100, 20, true) == 255);
-    CHECK(light.output(1600, 20, true) == 128);
-    CHECK(light.output(3105, 20, true) == 0);
-    light.handle(ButtonEvent::shortPress, 4000);
-    CHECK(light.output(4000, 20, true) == 0);
-    light.handle(ButtonEvent::longPress, 5000);
+    CHECK(light.output(2600, 20, true) == 128);
+    CHECK(light.output(5105, 20, true) == 0);
+    light.handle(ButtonEvent::shortPress, 6000);
+    CHECK(light.output(6000, 20, true) == 0);
+    light.handle(ButtonEvent::longPress, 7000);
     CHECK(!light.disabled());
-    CHECK(light.output(5000, 20, true) == 0);
-    CHECK(light.output(6500, 20, true) == 127);
-    CHECK(light.output(8005, 20, true) == 255);
-    CHECK(light.output(8006, 20, true) == 43);
+    CHECK(light.output(7000, 20, true) == 0);
+    CHECK(light.output(9500, 20, true) == 127);
+    CHECK(light.output(12005, 20, true) == 255);
+    CHECK(light.output(12006, 20, true) == 43);
     LightControl restored(true);
     CHECK(restored.output(0, 20, true) == 0);
     return 0;
@@ -69,8 +69,8 @@ TEST enable_during_day() {
     light.handle(ButtonEvent::longPress, 0);
     CHECK(light.output(0, 12, true) == 0);
     light.handle(ButtonEvent::shortPress, 1000);
-    CHECK(light.output(3000, 12, true) == 255);
-    CHECK(light.output(3001, 12, true) == 0);
+    CHECK(light.output(5000, 12, true) == 255);
+    CHECK(light.output(5001, 12, true) == 0);
     return 0;
 }
 
@@ -81,8 +81,8 @@ TEST timer_rollover() {
     CHECK(light.output(uint32_t(start + 599999), 12, true) == 255);
     CHECK(light.output(uint32_t(start + 600000), 12, true) == 0);
     light.handle(ButtonEvent::longPress, start);
-    CHECK(light.output(uint32_t(start + 1500), 12, true) == 128);
-    CHECK(light.output(uint32_t(start + 3001), 12, true) == 0);
+    CHECK(light.output(uint32_t(start + 2500), 12, true) == 128);
+    CHECK(light.output(uint32_t(start + 5001), 12, true) == 0);
     return 0;
 }
 
@@ -106,14 +106,14 @@ TEST button_long_once() {
     Button button;
     CHECK(button.update(true, 0) == ButtonEvent::none);
     CHECK(button.update(true, 30) == ButtonEvent::none);
-    CHECK(button.update(true, 2029) == ButtonEvent::none);
-    CHECK(button.update(true, 2030) == ButtonEvent::longPress);
+    CHECK(button.update(true, 1529) == ButtonEvent::none);
+    CHECK(button.update(true, 1530) == ButtonEvent::longPress);
     CHECK(button.update(true, 10000) == ButtonEvent::none);
     CHECK(button.update(false, 11000) == ButtonEvent::none);
     CHECK(button.update(false, 11030) == ButtonEvent::none);
     CHECK(button.update(true, 12000) == ButtonEvent::none);
     CHECK(button.update(true, 12030) == ButtonEvent::none);
-    CHECK(button.update(true, 14030) == ButtonEvent::longPress);
+    CHECK(button.update(true, 13530) == ButtonEvent::longPress);
     return 0;
 }
 
@@ -122,7 +122,7 @@ TEST button_rollover() {
     constexpr uint32_t start = UINT32_MAX - 15;
     CHECK(button.update(true, start) == ButtonEvent::none);
     CHECK(button.update(true, uint32_t(start + 30)) == ButtonEvent::none);
-    CHECK(button.update(true, uint32_t(start + 2030)) == ButtonEvent::longPress);
+    CHECK(button.update(true, uint32_t(start + 1530)) == ButtonEvent::longPress);
     CHECK(button.update(false, uint32_t(start + 2100)) == ButtonEvent::none);
     CHECK(button.update(false, uint32_t(start + 2130)) == ButtonEvent::none);
     return 0;
@@ -152,11 +152,11 @@ TEST automatic_ramp_overrides() {
     CHECK(light.output(640000, 20, true) == 43);
     light.handle(ButtonEvent::longPress, 650000);
     CHECK(light.output(650000, 20, true) == 255);
-    CHECK(light.output(653000, 20, true) == 0);
+    CHECK(light.output(655000, 20, true) == 0);
     CHECK(light.output(700000, 8, true) == 0);
     light.handle(ButtonEvent::longPress, 720000);
     CHECK(light.output(720000, 8, true) == 0);
-    CHECK(light.output(723000, 8, true) == 255);
+    CHECK(light.output(725000, 8, true) == 255);
     CHECK(light.output(730000, 8, true) == 22);
     CHECK(light.output(760000, 8, true) == 0);
     return 0;

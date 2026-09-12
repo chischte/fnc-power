@@ -4,9 +4,9 @@
 
 namespace Config {
 constexpr uint32_t debounceMs = 30;
-constexpr uint32_t longPressMs = 2000;
+constexpr uint32_t longPressMs = 1500;
 constexpr uint32_t serviceMs = 10UL * 60 * 1000;
-constexpr uint32_t fadeMs = 3000;
+constexpr uint32_t fadeMs = 5000;
 constexpr uint32_t automaticFadeMs = 60000;
 constexpr uint16_t minutesPerHour = 60;
 constexpr uint8_t outputRange = 255;
