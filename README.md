@@ -46,8 +46,8 @@ Die automatischen Rampen laufen auch während Servicebetrieb, dauerhaft Aus und 
 im Hintergrund weiter. Nach einer Übersteuerung gilt der aktuelle Wert der Zeitplanrampe.
 Die lange Rückmelderampe dauert 5 Sekunden; die kurzen Übergänge davor bzw. danach dauern
 0,4 Sekunden. Bereits erreichte Startwerte benötigen keinen vorbereitenden Übergang.
-Beim Aktivieren wird das Rampenmaximum zunächst 200 ms gehalten; danach folgen drei Blinkimpulse
-mit jeweils 200 ms Aus und 200 ms auf Maximalhelligkeit (standardmässig 100 %).
+Beim Aktivieren wird das Rampenmaximum zunächst 300 ms gehalten; danach folgen drei Blinkimpulse
+mit jeweils 300 ms Aus und 300 ms auf Maximalhelligkeit (standardmässig 100 %).
 Beim Deaktivieren gibt es keine Blinkimpulse.
 Ein erneuter langer Druck während der Rückmeldung startet vom zuletzt ausgegebenen Wert;
 beim Aktivieren wird der neue Rampenstart bei Bedarf in 0,4 Sekunden erreicht,
