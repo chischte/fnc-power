@@ -5,6 +5,7 @@
 namespace Config {
 constexpr uint32_t debounceMs = 30;
 constexpr uint32_t longPressMs = 1500;
+constexpr uint32_t serviceFadeMs = 2000;
 constexpr uint32_t serviceMs = 10UL * 60 * 1000;
 constexpr uint32_t fadeMs = 5000;
 constexpr uint32_t feedbackTransitionMs = 400;
@@ -153,7 +154,10 @@ public:
             feedback_.start(disabled_, lastOutput_, now);
         } else if (event == ButtonEvent::shortPress && !disabled_ && !feedback_.active()) {
             service_ = !service_ || uint32_t(now - serviceAt_) >= Config::serviceMs;
-            if (service_) serviceAt_ = now;
+            if (service_) {
+                serviceAt_ = now;
+                serviceFrom_ = lastOutput_;
+            }
         }
     }
     uint8_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
@@ -168,12 +172,19 @@ private:
         if (feedback_.active()) return feedback_.output(now, automaticOutput);
         if (disabled_) return 0;
         if (service_ && uint32_t(now - serviceAt_) >= Config::serviceMs) service_ = false;
-        return service_ ? Config::serviceOutput : automaticOutput;
+        return service_ ? serviceLevel(now) : automaticOutput;
+    }
+    uint8_t serviceLevel(uint32_t now) const {
+        const uint32_t elapsed = now - serviceAt_;
+        if (elapsed >= Config::serviceFadeMs) return Config::serviceOutput;
+        const int32_t difference = int32_t(Config::serviceOutput) - serviceFrom_;
+        return serviceFrom_ + difference * int32_t(elapsed) / int32_t(Config::serviceFadeMs);
     }
     AutomaticLight automatic_;
     FeedbackRamp feedback_;
     bool disabled_;
     bool service_ = false;
     uint8_t lastOutput_ = 0;
+    uint8_t serviceFrom_ = 0;
     uint32_t serviceAt_ = 0;
 };
