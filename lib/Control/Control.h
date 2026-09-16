@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include <PowerConfig.h>
+#include <UserConfig.h>
 
 namespace Config {
 constexpr uint32_t debounceMs = 30;

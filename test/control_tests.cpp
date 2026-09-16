@@ -10,7 +10,7 @@ TEST schedule() {
     LightControl light;
     for (uint8_t hour = 0; hour < 24; ++hour) {
         LightControl initial;
-        CHECK(initial.output(0, hour, true) == ((hour < 8 || hour >= 20) ? 43 : 0));
+        CHECK(initial.output(0, hour, true) == ((hour < 8 || hour >= 20) ? 89 : 0));
     }
     CHECK(light.output(0, 20, false) == 0);
     CHECK(light.output(0, 24, true) == 0);
@@ -25,7 +25,7 @@ TEST service_timeout() {
     CHECK(light.output(600100, 12, true) == 0);
     light.handle(ButtonEvent::shortPress, 600200);
     CHECK(light.output(1100000, 20, true) == 204);
-    CHECK(light.output(1200200, 20, true) == 43);
+    CHECK(light.output(1200200, 20, true) == 89);
     return 0;
 }
 
@@ -59,8 +59,8 @@ TEST disable_and_enable() {
     CHECK(light.output(7000, 20, true) == 0);
     CHECK(light.output(9500, 20, true) == 127);
     CHECK(light.output(12000, 20, true) == 255);
-    CHECK(light.output(14300, 20, true) == 149);
-    CHECK(light.output(14500, 20, true) == 43);
+    CHECK(light.output(14300, 20, true) == 172);
+    CHECK(light.output(14500, 20, true) == 89);
     LightControl restored(true);
     CHECK(restored.output(0, 20, true) == 0);
     return 0;
@@ -137,12 +137,12 @@ TEST automatic_ramps() {
     LightControl light;
     CHECK(light.output(0, 19, true) == 0);
     CHECK(light.output(100, 20, true) == 0);
-    CHECK(light.output(30100, 20, true) == 21);
-    CHECK(light.output(60099, 20, true) == 42);
-    CHECK(light.output(60100, 20, true) == 43);
-    CHECK(light.output(100000, 7, true) == 43);
-    CHECK(light.output(100100, 8, true) == 43);
-    CHECK(light.output(130100, 8, true) == 22);
+    CHECK(light.output(30100, 20, true) == 44);
+    CHECK(light.output(60099, 20, true) == 88);
+    CHECK(light.output(60100, 20, true) == 89);
+    CHECK(light.output(100000, 7, true) == 89);
+    CHECK(light.output(100100, 8, true) == 89);
+    CHECK(light.output(130100, 8, true) == 45);
     CHECK(light.output(160099, 8, true) == 1);
     CHECK(light.output(160100, 8, true) == 0);
     return 0;
@@ -153,8 +153,8 @@ TEST automatic_ramp_overrides() {
     CHECK(light.output(0, 19, true) == 0);
     light.handle(ButtonEvent::shortPress, 0);
     CHECK(light.output(580000, 20, true) == 204);
-    CHECK(light.output(600000, 20, true) == 14);
-    CHECK(light.output(640000, 20, true) == 43);
+    CHECK(light.output(600000, 20, true) == 29);
+    CHECK(light.output(640000, 20, true) == 89);
     light.handle(ButtonEvent::longPress, 650000);
     CHECK(light.output(650000, 20, true) == 255);
     CHECK(light.output(652500, 20, true) == 128);
@@ -163,7 +163,7 @@ TEST automatic_ramp_overrides() {
     light.handle(ButtonEvent::longPress, 720000);
     CHECK(light.output(720000, 8, true) == 0);
     CHECK(light.output(725000, 8, true) == 255);
-    CHECK(light.output(730000, 8, true) == 22);
+    CHECK(light.output(730000, 8, true) == 45);
     CHECK(light.output(760000, 8, true) == 0);
     return 0;
 }
@@ -172,13 +172,13 @@ TEST automatic_ramp_clock_changes() {
     LightControl light;
     CHECK(light.output(0, 19, true) == 0);
     CHECK(light.output(100, 20, true) == 0);
-    CHECK(light.output(30100, 20, true) == 21);
-    CHECK(light.output(30100, 12, true) == 21);
-    CHECK(light.output(60100, 12, true) == 11);
+    CHECK(light.output(30100, 20, true) == 44);
+    CHECK(light.output(30100, 12, true) == 44);
+    CHECK(light.output(60100, 12, true) == 22);
     CHECK(light.output(90100, 12, true) == 0);
     CHECK(light.output(100000, 20, true) == 0);
     CHECK(light.output(130000, 20, false) == 0);
-    CHECK(light.output(130100, 20, true) == 43);
+    CHECK(light.output(130100, 20, true) == 89);
     return 0;
 }
 
@@ -187,10 +187,10 @@ TEST automatic_ramp_rollover() {
     LightControl light;
     CHECK(light.output(start, 19, true) == 0);
     CHECK(light.output(start, 20, true) == 0);
-    CHECK(light.output(uint32_t(start + 30000), 20, true) == 21);
-    CHECK(light.output(uint32_t(start + 60000), 20, true) == 43);
-    CHECK(light.output(uint32_t(start + 70000), 8, true) == 43);
-    CHECK(light.output(uint32_t(start + 100000), 8, true) == 22);
+    CHECK(light.output(uint32_t(start + 30000), 20, true) == 44);
+    CHECK(light.output(uint32_t(start + 60000), 20, true) == 89);
+    CHECK(light.output(uint32_t(start + 70000), 8, true) == 89);
+    CHECK(light.output(uint32_t(start + 100000), 8, true) == 45);
     CHECK(light.output(uint32_t(start + 130000), 8, true) == 0);
     return 0;
 }
@@ -226,14 +226,14 @@ TEST brightness_limit() {
 
 TEST service_toggle_at_night() {
     LightControl light;
-    CHECK(light.output(0, 20, true) == 43);
+    CHECK(light.output(0, 20, true) == 89);
     light.handle(ButtonEvent::shortPress, 100);
-    CHECK(light.output(100, 20, true) == 43);
+    CHECK(light.output(100, 20, true) == 89);
     light.handle(ButtonEvent::shortPress, 200);
-    CHECK(light.output(200, 20, true) == 43);
+    CHECK(light.output(200, 20, true) == 89);
     light.handle(ButtonEvent::shortPress, 300);
     CHECK(light.output(600299, 20, true) == 204);
-    CHECK(light.output(600300, 20, true) == 43);
+    CHECK(light.output(600300, 20, true) == 89);
     return 0;
 }
 
@@ -243,8 +243,8 @@ TEST service_toggle_during_ramp() {
     light.handle(ButtonEvent::shortPress, 100);
     CHECK(light.output(100, 20, true) == 0);
     light.handle(ButtonEvent::shortPress, 30100);
-    CHECK(light.output(30100, 20, true) == 21);
-    CHECK(light.output(60100, 20, true) == 43);
+    CHECK(light.output(30100, 20, true) == 44);
+    CHECK(light.output(60100, 20, true) == 89);
     return 0;
 }
 
@@ -285,7 +285,7 @@ TEST feedback_restart() {
     CHECK(light.output(5200, 20, true) == 64);
     CHECK(light.output(5400, 20, true) == 0);
     CHECK(light.output(10400, 20, true) == 255);
-    CHECK(light.output(12900, 20, true) == 43);
+    CHECK(light.output(12900, 20, true) == 89);
     return 0;
 }
 
@@ -295,9 +295,9 @@ TEST feedback_return_tracks_automatic_ramp() {
     light.handle(ButtonEvent::longPress, 0);
     CHECK(light.output(0, 20, true) == 0);
     CHECK(light.output(5000, 20, true) == 255);
-    CHECK(light.output(7300, 20, true) == 130);
-    CHECK(light.output(7500, 20, true) == 5);
-    CHECK(light.output(60000, 20, true) == 43);
+    CHECK(light.output(7300, 20, true) == 133);
+    CHECK(light.output(7500, 20, true) == 11);
+    CHECK(light.output(60000, 20, true) == 89);
     return 0;
 }
 
@@ -320,9 +320,9 @@ TEST enable_blinks_three_times() {
     CHECK(light.output(6800, 20, true) == 255);
     CHECK(light.output(7099, 20, true) == 255);
     CHECK(light.output(7100, 20, true) == 255);
-    CHECK(light.output(7300, 20, true) == 149);
-    CHECK(light.output(7500, 20, true) == 43);
-    CHECK(light.output(10000, 20, true) == 43);
+    CHECK(light.output(7300, 20, true) == 172);
+    CHECK(light.output(7500, 20, true) == 89);
+    CHECK(light.output(10000, 20, true) == 89);
     return 0;
 }
 
@@ -351,26 +351,26 @@ TEST service_ramp_from_day_and_night() {
     CHECK(day.output(2200, 12, true) == 0);
 
     LightControl night;
-    CHECK(night.output(0, 20, true) == 43);
+    CHECK(night.output(0, 20, true) == 89);
     night.handle(ButtonEvent::shortPress, 100);
-    CHECK(night.output(100, 20, true) == 43);
-    CHECK(night.output(1100, 20, true) == 123);
+    CHECK(night.output(100, 20, true) == 89);
+    CHECK(night.output(1100, 20, true) == 146);
     CHECK(night.output(2100, 20, true) == 204);
     night.handle(ButtonEvent::shortPress, 2200);
-    CHECK(night.output(2200, 20, true) == 43);
+    CHECK(night.output(2200, 20, true) == 89);
     return 0;
 }
 
 TEST service_ramp_cancel_and_rollover() {
     constexpr uint32_t start = UINT32_MAX - 500;
     LightControl light;
-    CHECK(light.output(start, 20, true) == 43);
+    CHECK(light.output(start, 20, true) == 89);
     light.handle(ButtonEvent::shortPress, start);
-    CHECK(light.output(uint32_t(start + 1000), 20, true) == 123);
+    CHECK(light.output(uint32_t(start + 1000), 20, true) == 146);
     light.handle(ButtonEvent::shortPress, uint32_t(start + 1000));
-    CHECK(light.output(uint32_t(start + 1000), 20, true) == 43);
+    CHECK(light.output(uint32_t(start + 1000), 20, true) == 89);
     light.handle(ButtonEvent::shortPress, uint32_t(start + 1100));
-    CHECK(light.output(uint32_t(start + 2100), 20, true) == 123);
+    CHECK(light.output(uint32_t(start + 2100), 20, true) == 146);
     CHECK(light.output(uint32_t(start + 3100), 20, true) == 204);
     return 0;
 }

@@ -4,10 +4,10 @@
 
 ## Konfiguration
 
-Die Einstellungen stehen zentral in [`include/PowerConfig.h`](include/PowerConfig.h):
+Die Einstellungen stehen zentral in [`UserConfig.h`](UserConfig.h) im Projektstamm:
 
 ```cpp
-constexpr int brightnessPercent = 17;
+constexpr int brightnessPercent = 35;
 constexpr int serviceBrightnessPercent = 80;
 constexpr int maxBrightnessPercent = 100;
 constexpr int onHour = 20;
@@ -22,6 +22,12 @@ Alle Helligkeitsangaben sind absolute Prozentwerte des 0–10-V-Bereichs: 17 % b
 Maximum von 70 % weiterhin 17 %. Ein Sollwert über dem Maximum wird auf das Maximum begrenzt.
 0 % als Maximum hält den Ausgang immer auf 0 V.
 
+Bei 17 % wurden mindestens 44 lux in der Box gemessen, bei 50 % mindestens 800 lux.
+Bei 40 % wurden 510 lux gemessen, bei 30 % wurden 260 lux gemessen.
+Bei 35 % wurden mindestens 369 lux gemessen. Die Automatik bleibt deshalb auf 35 %
+(ca. 3,49 V); das Ziel von mindestens 300 lux ist erreicht.
+Die aufsteigend sortierte Messtabelle steht direkt in `UserConfig.h`.
+
 Zeiten sind lokale RTC-Zeiten mit Minutenauflösung. Zeitfenster tagsüber und über Mitternacht
 werden unterstützt; gleiche Ein-/Ausschaltzeiten deaktivieren die Automatik (Service bleibt verfügbar).
 Ungültige Prozentwerte, Stunden oder Minuten erzeugen beim Build eine Fehlermeldung.
@@ -35,8 +41,8 @@ Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 
 | Aktion / Uhrzeit | Ausgang |
 | --- | --- |
-| Ab 20:00:00 | In 60 Sekunden von 0 auf 17 %, danach 17 % (ca. 1,69 V) |
-| Ab 08:00:00 | In 60 Sekunden von 17 auf 0 %, danach Aus (0 V) |
+| Ab 20:00:00 | In 60 Sekunden von 0 auf 35 %, danach 35 % (ca. 3,49 V) |
+| Ab 08:00:00 | In 60 Sekunden von 35 auf 0 %, danach Aus (0 V) |
 | Kurzer Tastendruck, beim Loslassen | In 2 s vom aktuellen Wert auf 80 %, nach 10 Minuten zurück zum Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Beendet das Servicelicht sofort; zurück zum aktuellen Automatikwert |
 | Langer Druck (1,25 Sekunden) | Dauerhaft aus; sofort auf Maximum, dann in 5 s auf 0 % |
@@ -58,7 +64,7 @@ beim Deaktivieren wird sofort auf Maximum geschaltet. Longpress: 0,75 Sekunden z
 Die Haltezeit beginnt nach der 30-ms-Entprellung; langes Halten schaltet nur einmal pro Tastendruck.
 Beim Start oder nach Wiederherstellung einer gültigen RTC gilt sofort der aktuelle Tag-/Nacht-Sollwert.
 Ein Uhrstellen über eine Schaltgrenze startet ebenfalls eine 60-Sekunden-Rampe vom aktuellen Automatikwert.
-Der analoge Ausgang hat 8 Bit Auflösung: zwischen 0 und 17 % erfolgt die Rampe in 43 kleinen Stufen.
+Der analoge Ausgang hat 8 Bit Auflösung: zwischen 0 und 35 % erfolgt die Rampe in 89 kleinen Stufen.
 
 Langes Halten löst genau einmal aus, beim Loslassen folgt kein kurzer Druck.
 Der Taster wird mit 30 ms entprellt. Dimmrampen und Servicebetrieb blockieren die Hauptschleife nicht.
@@ -124,7 +130,7 @@ Die RTC-Pufferung ist zeitlich begrenzt; nach längerer stromloser Lagerung die 
 
 ## Aufbau und Tests
 
-- `lib/Control/Control.h`: hardwareunabhängige Taster- und Lichtlogik; Bedienzeiten in `Config`, Benutzereinstellungen in `include/PowerConfig.h`.
+- `lib/Control/Control.h`: hardwareunabhängige Taster- und Lichtlogik; Bedienzeiten in `Config`, Benutzereinstellungen in `UserConfig.h`.
 - `src/RtcClock.cpp`: SPI-Zugriff auf die RTC, Kalenderprüfung und Uhrstellen.
 - `src/SerialClock.cpp`: begrenzter, nicht wartender serieller Befehlsparser.
 - `src/main.cpp`: Anschlüsse, EEPROM und Zusammenführung der Module.

@@ -15,6 +15,7 @@ if not compiler:
 library = build / ('control_tests.dll' if os.name == 'nt' else 'control_tests.so')
 command = [compiler, '-std=c++11', '-O2', '-Wall', '-Wextra', '-Werror',
            '-shared', '-I' + str(root / 'lib/Control'), '-I' + str(root / 'include'),
+           '-I' + str(root),
            str(root / 'test/control_tests.cpp'), '-o', str(library)]
 if os.name == 'nt' and 'clang' in Path(compiler).name:
     # No CRT/Visual Studio dependency: tests only use fixed-width integer arithmetic.

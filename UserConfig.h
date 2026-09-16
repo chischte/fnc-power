@@ -3,7 +3,16 @@
 // Nach Änderungen neu bauen und auf den CONTROLLINO hochladen.
 namespace PowerConfig {
 // Absolute Prozentwerte des 0–10-V-Ausgangs; 100 % entsprechen 10 V.
-constexpr int brightnessPercent = 17;
+// Minimale Beleuchtungsstärke bei verschiedenen Prozentwerten (in der Box gemessen):
+//   % | min lux
+// ----|--------
+//  17 |      44
+//  30 |     260
+//  35 |     369
+//  40 |     510
+//  50 |     800
+// Ziel: mindestens 300 lux; bei 35 % mit 369 lux erreicht.
+constexpr int brightnessPercent = 35;
 // Helligkeit bei kurzem Tastendruck, ebenfalls durch das Maximum begrenzt.
 constexpr int serviceBrightnessPercent = 80;
 // Obergrenze für Automatik, Servicelicht und Taster-Rückmeldungen.
