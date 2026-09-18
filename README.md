@@ -68,7 +68,10 @@ Der analoge Ausgang hat 8 Bit Auflösung: zwischen 0 und 35 % erfolgt die Rampe 
 
 Langes Halten löst genau einmal aus, beim Loslassen folgt kein kurzer Druck.
 Der Taster wird mit 30 ms entprellt. Dimmrampen und Servicebetrieb blockieren die Hauptschleife nicht.
-Kurze Tastendrücke werden bei dauerhaft Aus und während einer Rückmelderampe ignoriert.
+Das Servicelicht funktioniert auch bei ausgeschalteter Automatik und ohne gueltige RTC.
+Ein kurzer Druck bricht eine laufende Modus-Rueckmeldung ab und startet das Servicelicht.
+Der gespeicherte Automatikmodus bleibt unveraendert. Ist die Automatik aus, geht das Licht
+nach erneutem kurzem Druck oder nach 10 Minuten wieder direkt auf 0 %.
 Ein langer Druck beendet den Servicebetrieb. Dauerhaft Aus bleibt im EEPROM über Neustarts erhalten;
 ein fabrikneues EEPROM startet in Automatik. Servicebetrieb und Rampen werden nach Neustart nicht fortgesetzt.
 
