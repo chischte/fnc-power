@@ -115,6 +115,7 @@ public:
         preparationMs_ = !disabling && currentOutput != 0 ? Config::feedbackTransitionMs : 0;
     }
     bool active() const { return active_; }
+    void cancel() { active_ = false; }
     uint8_t output(uint32_t now, uint8_t automaticOutput) {
         uint32_t elapsed = now - startedAt_;
         const uint8_t initial = disabling_ ? Config::fullOutput : 0;
@@ -156,7 +157,8 @@ public:
             disabled_ = !disabled_;
             service_ = false;
             feedback_.start(disabled_, lastOutput_, now);
-        } else if (event == ButtonEvent::shortPress && !disabled_ && !feedback_.active()) {
+        } else if (event == ButtonEvent::shortPress) {
+            feedback_.cancel();
             service_ = !service_ || uint32_t(now - serviceAt_) >= Config::serviceMs;
             if (service_) {
                 serviceAt_ = now;
@@ -174,9 +176,9 @@ public:
 private:
     uint8_t currentOutput(uint32_t now, uint8_t automaticOutput) {
         if (feedback_.active()) return feedback_.output(now, automaticOutput);
-        if (disabled_) return 0;
         if (service_ && uint32_t(now - serviceAt_) >= Config::serviceMs) service_ = false;
-        return service_ ? serviceLevel(now) : automaticOutput;
+        if (service_) return serviceLevel(now);
+        return disabled_ ? 0 : automaticOutput;
     }
     uint8_t serviceLevel(uint32_t now) const {
         const uint32_t elapsed = now - serviceAt_;

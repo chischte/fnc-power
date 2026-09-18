@@ -70,10 +70,8 @@ TEST enable_during_day() {
     LightControl light(true);
     light.handle(ButtonEvent::longPress, 0);
     CHECK(light.output(0, 12, true) == 0);
-    light.handle(ButtonEvent::shortPress, 1000);
     CHECK(light.output(5000, 12, true) == 255);
     CHECK(light.output(7300, 12, true) == 128);
-    light.handle(ButtonEvent::shortPress, 7300);
     CHECK(light.output(7500, 12, true) == 0);
     return 0;
 }
@@ -331,7 +329,6 @@ TEST enable_blinks_across_rollover() {
     LightControl light(true);
     light.handle(ButtonEvent::longPress, start);
     CHECK(light.output(uint32_t(start + 5300), 12, true) == 0);
-    light.handle(ButtonEvent::shortPress, uint32_t(start + 5350));
     CHECK(light.output(uint32_t(start + 5600), 12, true) == 255);
     CHECK(light.output(uint32_t(start + 5900), 12, true) == 0);
     CHECK(light.output(uint32_t(start + 6200), 12, true) == 255);
@@ -404,5 +401,53 @@ TEST button_enable_rollover_and_short_press() {
     CHECK(shortButton.update(true, 30, Config::enableLongPressMs) == ButtonEvent::none);
     CHECK(shortButton.update(false, 700, Config::enableLongPressMs) == ButtonEvent::none);
     CHECK(shortButton.update(false, 730, Config::enableLongPressMs) == ButtonEvent::shortPress);
+    return 0;
+}
+
+TEST service_when_automatic_disabled() {
+    LightControl light(true);
+    CHECK(light.output(0, 20, true) == 0);
+    light.handle(ButtonEvent::shortPress, 100);
+    CHECK(light.disabled());
+    CHECK(light.output(100, 20, true) == 0);
+    CHECK(light.output(1100, 20, true) == Config::serviceOutput / 2);
+    CHECK(light.output(2100, 20, true) == Config::serviceOutput);
+    light.handle(ButtonEvent::shortPress, 2200);
+    CHECK(light.output(2200, 20, true) == 0);
+    CHECK(light.disabled());
+    light.handle(ButtonEvent::shortPress, 3000);
+    CHECK(light.output(602999, 20, true) == Config::serviceOutput);
+    CHECK(light.output(603000, 20, true) == 0);
+    CHECK(light.disabled());
+    return 0;
+}
+
+TEST service_disabled_without_clock_and_rollover() {
+    constexpr uint32_t start = UINT32_MAX - 500;
+    LightControl light(true);
+    light.handle(ButtonEvent::shortPress, start);
+    CHECK(light.output(uint32_t(start + 1000), 0, false) == Config::serviceOutput / 2);
+    CHECK(light.output(uint32_t(start + 2000), 0, false) == Config::serviceOutput);
+    CHECK(light.output(uint32_t(start + 600000), 0, false) == 0);
+    CHECK(light.disabled());
+    return 0;
+}
+
+TEST service_interrupts_mode_feedback() {
+    for (uint8_t mode = 0; mode < 2; ++mode) {
+        const bool initiallyDisabled = mode != 0;
+        LightControl light(initiallyDisabled);
+        light.output(0, 12, true);
+        light.handle(ButtonEvent::longPress, 0);
+        const uint8_t current = light.output(1000, 12, true);
+        light.handle(ButtonEvent::shortPress, 1000);
+        CHECK(light.output(1000, 12, true) == current);
+        CHECK(light.output(3000, 12, true) == Config::serviceOutput);
+        CHECK(light.disabled() == !initiallyDisabled);
+        light.handle(ButtonEvent::shortPress, 3100);
+        CHECK(light.output(3100, 12, true) == 0);
+        CHECK(light.output(8000, 12, true) == 0);
+        CHECK(light.disabled() == !initiallyDisabled);
+    }
     return 0;
 }
