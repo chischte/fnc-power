@@ -6,7 +6,7 @@ namespace Config {
 constexpr uint32_t debounceMs = 30;
 constexpr uint32_t enableLongPressMs = 750;
 constexpr uint32_t disableLongPressMs = 1250;
-constexpr uint32_t serviceFadeMs = 2000;
+constexpr uint32_t serviceFadeMs = 5000;
 constexpr uint32_t serviceMs = 10UL * 60 * 1000;
 constexpr uint32_t fadeMs = 5000;
 constexpr uint32_t feedbackTransitionMs = 400;

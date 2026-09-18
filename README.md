@@ -43,12 +43,12 @@ Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 | --- | --- |
 | Ab 20:00:00 | In 60 Sekunden von 0 auf 35 %, danach 35 % (ca. 3,49 V) |
 | Ab 08:00:00 | In 60 Sekunden von 35 auf 0 %, danach Aus (0 V) |
-| Kurzer Tastendruck, beim Loslassen | In 2 s vom aktuellen Wert auf 80 %, nach 10 Minuten zurück zum Zeitplan |
+| Kurzer Tastendruck, beim Loslassen | In 5 s vom aktuellen Wert auf 80 %, nach 10 Minuten zurück zum Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Beendet das Servicelicht sofort; zurück zum aktuellen Automatikwert |
 | Langer Druck (1,25 Sekunden) | Dauerhaft aus; sofort auf Maximum, dann in 5 s auf 0 % |
 | Erneuter langer Druck (0,75 Sekunden) | Automatik; in 5 s von 0 auf Maximum, dreimal kurz blinken, dann in 0,4 s zum aktuellen Automatikwert |
 
-Die 10 Minuten Servicezeit beginnen mit dem kurzen Tastendruck und enthalten die 2-Sekunden-Rampe.
+Die 10 Minuten Servicezeit beginnen mit dem kurzen Tastendruck und enthalten die 5-Sekunden-Rampe.
 Erneuter kurzer Druck bricht auch eine laufende Service-Rampe ab; Rückkehr und Zeitablauf erfolgen ohne Rampe.
 
 Die automatischen Rampen laufen auch während Servicebetrieb, dauerhaft Aus und Taster-Rückmeldungen

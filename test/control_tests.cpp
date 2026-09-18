@@ -32,13 +32,13 @@ TEST service_timeout() {
 TEST service_toggle_and_boundaries() {
     LightControl light;
     light.handle(ButtonEvent::shortPress, 0);
-    CHECK(light.output(100, 7, true) == 10);
-    CHECK(light.output(200, 8, true) == 20);
+    CHECK(light.output(100, 7, true) == 4);
+    CHECK(light.output(200, 8, true) == 8);
     light.handle(ButtonEvent::shortPress, 500000);
     CHECK(light.output(500000, 8, true) == 0);
     CHECK(light.output(1100000, 8, true) == 0);
     light.handle(ButtonEvent::shortPress, 1200000);
-    CHECK(light.output(1202000, 0, false) == 204);
+    CHECK(light.output(1205000, 0, false) == 204);
     CHECK(light.output(1800000, 0, false) == 0);
     return 0;
 }
@@ -251,7 +251,7 @@ TEST service_press_at_expiry() {
     LightControl light;
     light.handle(ButtonEvent::shortPress, start);
     CHECK(light.output(start, 12, true) == 0);
-    CHECK(light.output(uint32_t(start + 2000), 12, true) == 204);
+    CHECK(light.output(uint32_t(start + 5000), 12, true) == 204);
     // handle() runs before output() in the application, including at the deadline.
     const uint32_t deadline = start + Config::serviceMs;
     light.handle(ButtonEvent::shortPress, deadline);
@@ -341,20 +341,20 @@ TEST service_ramp_from_day_and_night() {
     CHECK(day.output(0, 12, true) == 0);
     day.handle(ButtonEvent::shortPress, 100);
     CHECK(day.output(100, 12, true) == 0);
-    CHECK(day.output(1100, 12, true) == 102);
-    CHECK(day.output(2099, 12, true) == 203);
-    CHECK(day.output(2100, 12, true) == 204);
-    day.handle(ButtonEvent::shortPress, 2200);
-    CHECK(day.output(2200, 12, true) == 0);
+    CHECK(day.output(2600, 12, true) == 102);
+    CHECK(day.output(5099, 12, true) == 203);
+    CHECK(day.output(5100, 12, true) == 204);
+    day.handle(ButtonEvent::shortPress, 5200);
+    CHECK(day.output(5200, 12, true) == 0);
 
     LightControl night;
     CHECK(night.output(0, 20, true) == 89);
     night.handle(ButtonEvent::shortPress, 100);
     CHECK(night.output(100, 20, true) == 89);
-    CHECK(night.output(1100, 20, true) == 146);
-    CHECK(night.output(2100, 20, true) == 204);
-    night.handle(ButtonEvent::shortPress, 2200);
-    CHECK(night.output(2200, 20, true) == 89);
+    CHECK(night.output(2600, 20, true) == 146);
+    CHECK(night.output(5100, 20, true) == 204);
+    night.handle(ButtonEvent::shortPress, 5200);
+    CHECK(night.output(5200, 20, true) == 89);
     return 0;
 }
 
@@ -363,12 +363,12 @@ TEST service_ramp_cancel_and_rollover() {
     LightControl light;
     CHECK(light.output(start, 20, true) == 89);
     light.handle(ButtonEvent::shortPress, start);
-    CHECK(light.output(uint32_t(start + 1000), 20, true) == 146);
-    light.handle(ButtonEvent::shortPress, uint32_t(start + 1000));
-    CHECK(light.output(uint32_t(start + 1000), 20, true) == 89);
-    light.handle(ButtonEvent::shortPress, uint32_t(start + 1100));
-    CHECK(light.output(uint32_t(start + 2100), 20, true) == 146);
-    CHECK(light.output(uint32_t(start + 3100), 20, true) == 204);
+    CHECK(light.output(uint32_t(start + 2500), 20, true) == 146);
+    light.handle(ButtonEvent::shortPress, uint32_t(start + 2500));
+    CHECK(light.output(uint32_t(start + 2500), 20, true) == 89);
+    light.handle(ButtonEvent::shortPress, uint32_t(start + 2600));
+    CHECK(light.output(uint32_t(start + 5100), 20, true) == 146);
+    CHECK(light.output(uint32_t(start + 7600), 20, true) == 204);
     return 0;
 }
 
@@ -410,14 +410,14 @@ TEST service_when_automatic_disabled() {
     light.handle(ButtonEvent::shortPress, 100);
     CHECK(light.disabled());
     CHECK(light.output(100, 20, true) == 0);
-    CHECK(light.output(1100, 20, true) == Config::serviceOutput / 2);
-    CHECK(light.output(2100, 20, true) == Config::serviceOutput);
-    light.handle(ButtonEvent::shortPress, 2200);
-    CHECK(light.output(2200, 20, true) == 0);
+    CHECK(light.output(2600, 20, true) == Config::serviceOutput / 2);
+    CHECK(light.output(5100, 20, true) == Config::serviceOutput);
+    light.handle(ButtonEvent::shortPress, 5200);
+    CHECK(light.output(5200, 20, true) == 0);
     CHECK(light.disabled());
-    light.handle(ButtonEvent::shortPress, 3000);
-    CHECK(light.output(602999, 20, true) == Config::serviceOutput);
-    CHECK(light.output(603000, 20, true) == 0);
+    light.handle(ButtonEvent::shortPress, 6000);
+    CHECK(light.output(605999, 20, true) == Config::serviceOutput);
+    CHECK(light.output(606000, 20, true) == 0);
     CHECK(light.disabled());
     return 0;
 }
@@ -426,8 +426,8 @@ TEST service_disabled_without_clock_and_rollover() {
     constexpr uint32_t start = UINT32_MAX - 500;
     LightControl light(true);
     light.handle(ButtonEvent::shortPress, start);
-    CHECK(light.output(uint32_t(start + 1000), 0, false) == Config::serviceOutput / 2);
-    CHECK(light.output(uint32_t(start + 2000), 0, false) == Config::serviceOutput);
+    CHECK(light.output(uint32_t(start + 2500), 0, false) == Config::serviceOutput / 2);
+    CHECK(light.output(uint32_t(start + 5000), 0, false) == Config::serviceOutput);
     CHECK(light.output(uint32_t(start + 600000), 0, false) == 0);
     CHECK(light.disabled());
     return 0;
@@ -442,10 +442,10 @@ TEST service_interrupts_mode_feedback() {
         const uint8_t current = light.output(1000, 12, true);
         light.handle(ButtonEvent::shortPress, 1000);
         CHECK(light.output(1000, 12, true) == current);
-        CHECK(light.output(3000, 12, true) == Config::serviceOutput);
+        CHECK(light.output(6000, 12, true) == Config::serviceOutput);
         CHECK(light.disabled() == !initiallyDisabled);
-        light.handle(ButtonEvent::shortPress, 3100);
-        CHECK(light.output(3100, 12, true) == 0);
+        light.handle(ButtonEvent::shortPress, 6100);
+        CHECK(light.output(6100, 12, true) == 0);
         CHECK(light.output(8000, 12, true) == 0);
         CHECK(light.disabled() == !initiallyDisabled);
     }
