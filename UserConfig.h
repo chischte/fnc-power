@@ -14,7 +14,7 @@ namespace PowerConfig {
 // Ziel: mindestens 300 lux; bei 35 % mit 369 lux erreicht.
 constexpr int brightnessPercent = 35;
 // Helligkeit bei kurzem Tastendruck, ebenfalls durch das Maximum begrenzt.
-constexpr int serviceBrightnessPercent = 80;
+constexpr int serviceBrightnessPercent = 100;
 // Obergrenze für Automatik, Servicelicht und Taster-Rückmeldungen.
 constexpr int maxBrightnessPercent = 100;
 

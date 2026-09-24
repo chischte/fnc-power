@@ -27,7 +27,7 @@ Bei beleuchteten Tastern die Anschlüsse für die Beleuchtung getrennt behandeln
 Ein normaler mechanischer Taster und seine zwei Leitungen können weiterverwendet werden.
 
 OUT4 ist der vierte analoge Ausgang (MCP4728 Kanal D). OUT1–3 werden beim Firmwarestart auf 0 gesetzt.
-12-Bit-Sollwerte: 35 % = 1433/4095, nominal ca. 3,50 V; Service 80 % = 3276/4095, nominal ca. 8 V.
+12-Bit-Sollwerte: 35 % = 1433/4095, nominal ca. 3,50 V; Service 100 % = 4095/4095, nominal ca. 10 V.
 Die DAC-Referenz ist intern mit Verstärkung 1× wie im KinCony-ESPHome-Beispiel.
 Diese Werte am vorhandenen Board vor Anschluss des Dimmers messen.
 

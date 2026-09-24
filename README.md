@@ -43,7 +43,7 @@ Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 | --- | --- |
 | Ab 20:00:00 | In 60 Sekunden von 0 auf 35 %, danach 35 % (ca. 3,50 V) |
 | Ab 08:00:00 | In 60 Sekunden von 35 auf 0 %, danach Aus (0 V) |
-| Kurzer Tastendruck, beim Loslassen | In 5 s vom aktuellen Wert auf 80 %, nach 10 Minuten zurück zum Zeitplan |
+| Kurzer Tastendruck, beim Loslassen | In 5 s vom aktuellen Wert auf 100 %, nach 10 Minuten zurück zum Zeitplan |
 | Weiterer kurzer Druck im Servicebetrieb | Beendet das Servicelicht sofort; zurück zum aktuellen Automatikwert |
 | Langer Druck (1,25 Sekunden) | Dauerhaft aus; sofort auf Maximum, dann in 5 s auf 0 % |
 | Erneuter langer Druck (0,75 Sekunden) | Automatik; in 5 s von 0 auf Maximum, dreimal kurz blinken, dann in 0,4 s zum aktuellen Automatikwert |
@@ -287,7 +287,7 @@ seinen letzten Spannungswert behalten. Netzwerkfehler unterbrechen die Lichtsteu
 ## Inbetriebnahme am Gerät
 
 1. Ohne angeschlossenen Dimmer starten. `DM4 I/O OK` prüfen; Spannung an Ausgang 4 messen.
-2. Uhr stellen, bei Tag ca. 0 V und bei Nacht ca. 3,50 V prüfen. Kurz drücken: in 5 s auf ca. 8 V.
+2. Uhr stellen, bei Tag ca. 0 V und bei Nacht ca. 3,50 V prüfen. Kurz drücken: in 5 s auf ca. 10 V.
 3. Ausgänge 1–3 auf 0 V prüfen; erst dann den kompatiblen Dimmer anschliessen.
 4. Uhr auf 07:59:55 und 19:59:55 stellen und beide 60-Sekunden-Rampen beobachten.
 5. Service tags/nachts, beide langen Tastendrücke sowie Neustart bei dauerhaft Aus prüfen.
