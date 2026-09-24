@@ -1,0 +1,7 @@
+{
+  "hostname": "fnc-power",
+  "ethernet": true,
+  "wifi_ssid": "",
+  "wifi_password": "",
+  "ota_password": ""
+}

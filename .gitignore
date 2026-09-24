@@ -2,3 +2,5 @@
 .vscode/*
 !.vscode/extensions.json
 __pycache__/
+network.local.json
+wifi-credentials.h

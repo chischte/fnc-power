@@ -15,14 +15,14 @@ constexpr uint8_t feedbackBlinkCount = 3;
 constexpr uint32_t feedbackBlinkSequenceMs = feedbackBlinkMs * (1 + 2 * feedbackBlinkCount);
 constexpr uint32_t automaticFadeMs = 60000;
 constexpr uint16_t minutesPerHour = 60;
-constexpr uint8_t outputRange = 255;
-constexpr uint8_t percentOutput(int percent, int maximum) {
-    return (outputRange * uint16_t(percent < maximum ? percent : maximum) + 50) / 100;
+constexpr uint16_t outputRange = 4095;
+constexpr uint16_t percentOutput(int percent, int maximum) {
+    return (uint32_t(outputRange) * uint16_t(percent < maximum ? percent : maximum) + 50) / 100;
 }
-constexpr uint8_t serviceOutput = percentOutput(PowerConfig::serviceBrightnessPercent,
+constexpr uint16_t serviceOutput = percentOutput(PowerConfig::serviceBrightnessPercent,
                                                PowerConfig::maxBrightnessPercent);
-constexpr uint8_t fullOutput = percentOutput(PowerConfig::maxBrightnessPercent, 100);
-constexpr uint8_t nightOutput = percentOutput(PowerConfig::brightnessPercent,
+constexpr uint16_t fullOutput = percentOutput(PowerConfig::maxBrightnessPercent, 100);
+constexpr uint16_t nightOutput = percentOutput(PowerConfig::brightnessPercent,
                                              PowerConfig::maxBrightnessPercent);
 constexpr uint16_t onTime = PowerConfig::onHour * minutesPerHour + PowerConfig::onMinute;
 constexpr uint16_t offTime = PowerConfig::offHour * minutesPerHour + PowerConfig::offMinute;
@@ -71,13 +71,13 @@ private:
 
 class AutomaticLight {
 public:
-    uint8_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
+    uint16_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
         if (!clockValid || hour > 23 || minute > 59) {
             initialized_ = false;
-            return 0;
+            return Config::nightOutput;
         }
         const uint16_t time = hour * Config::minutesPerHour + minute;
-        const uint8_t target = Config::isScheduledOn(time, Config::onTime, Config::offTime)
+        const uint16_t target = Config::isScheduledOn(time, Config::onTime, Config::offTime)
             ? Config::nightOutput : 0;
         if (!initialized_) {
             initialized_ = true;
@@ -92,7 +92,7 @@ public:
         return level(now);
     }
 private:
-    uint8_t level(uint32_t now) const {
+    uint16_t level(uint32_t now) const {
         if (from_ == target_) return target_;
         const uint32_t elapsed = now - startedAt_;
         if (elapsed >= Config::automaticFadeMs) return target_;
@@ -100,14 +100,14 @@ private:
         return from_ + difference * int32_t(elapsed) / int32_t(Config::automaticFadeMs);
     }
     bool initialized_ = false;
-    uint8_t from_ = 0;
-    uint8_t target_ = 0;
+    uint16_t from_ = 0;
+    uint16_t target_ = 0;
     uint32_t startedAt_ = 0;
 };
 
 class FeedbackRamp {
 public:
-    void start(bool disabling, uint8_t currentOutput, uint32_t now) {
+    void start(bool disabling, uint16_t currentOutput, uint32_t now) {
         disabling_ = disabling;
         from_ = currentOutput;
         startedAt_ = now;
@@ -116,13 +116,13 @@ public:
     }
     bool active() const { return active_; }
     void cancel() { active_ = false; }
-    uint8_t output(uint32_t now, uint8_t automaticOutput) {
+    uint16_t output(uint32_t now, uint16_t automaticOutput) {
         uint32_t elapsed = now - startedAt_;
-        const uint8_t initial = disabling_ ? Config::fullOutput : 0;
+        const uint16_t initial = disabling_ ? Config::fullOutput : 0;
         if (elapsed < preparationMs_)
             return interpolate(from_, initial, elapsed, preparationMs_);
         elapsed -= preparationMs_;
-        const uint8_t final = disabling_ ? 0 : Config::fullOutput;
+        const uint16_t final = disabling_ ? 0 : Config::fullOutput;
         if (elapsed < Config::fadeMs)
             return interpolate(initial, final, elapsed, Config::fadeMs);
         elapsed -= Config::fadeMs;
@@ -138,13 +138,13 @@ public:
         return disabling_ ? 0 : automaticOutput;
     }
 private:
-    static uint8_t interpolate(uint8_t from, uint8_t to, uint32_t elapsed, uint32_t duration) {
+    static uint16_t interpolate(uint16_t from, uint16_t to, uint32_t elapsed, uint32_t duration) {
         const int32_t difference = int32_t(to) - from;
         return from + difference * int32_t(elapsed) / int32_t(duration);
     }
     bool active_ = false;
     bool disabling_ = false;
-    uint8_t from_ = 0;
+    uint16_t from_ = 0;
     uint32_t startedAt_ = 0;
     uint32_t preparationMs_ = 0;
 };
@@ -166,21 +166,23 @@ public:
             }
         }
     }
-    uint8_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
+    uint16_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
         // Keep the schedule progressing while service light or manual feedback overrides it.
-        const uint8_t automaticOutput = automatic_.output(now, hour, clockValid, minute);
+        const uint16_t automaticOutput = automatic_.output(now, hour, clockValid, minute);
         lastOutput_ = currentOutput(now, automaticOutput);
         return lastOutput_;
     }
     bool disabled() const { return disabled_; }
+    bool serviceActive() const { return service_; }
+    bool feedbackActive() const { return feedback_.active(); }
 private:
-    uint8_t currentOutput(uint32_t now, uint8_t automaticOutput) {
+    uint16_t currentOutput(uint32_t now, uint16_t automaticOutput) {
         if (feedback_.active()) return feedback_.output(now, automaticOutput);
         if (service_ && uint32_t(now - serviceAt_) >= Config::serviceMs) service_ = false;
         if (service_) return serviceLevel(now);
         return disabled_ ? 0 : automaticOutput;
     }
-    uint8_t serviceLevel(uint32_t now) const {
+    uint16_t serviceLevel(uint32_t now) const {
         const uint32_t elapsed = now - serviceAt_;
         if (elapsed >= Config::serviceFadeMs) return Config::serviceOutput;
         const int32_t difference = int32_t(Config::serviceOutput) - serviceFrom_;
@@ -190,7 +192,7 @@ private:
     FeedbackRamp feedback_;
     bool disabled_;
     bool service_ = false;
-    uint8_t lastOutput_ = 0;
-    uint8_t serviceFrom_ = 0;
+    uint16_t lastOutput_ = 0;
+    uint16_t serviceFrom_ = 0;
     uint32_t serviceAt_ = 0;
 };

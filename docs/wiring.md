@@ -1,34 +1,61 @@
-# Anschlussplan
+# Anschlussplan KinCony DM4
 
 ![Anschlussplan für Taster und 0–10-V-Dimmer](wiring.svg)
 
-Der Plan entspricht der Firmware: `CONTROLLINO_A0` für den Taster und `CONTROLLINO_AO0` für den Dimmer.
 Die Zeichnung zeigt Verbindungen, nicht die räumliche Position der Klemmen.
+Verwendet werden der **vierte digitale Eingang** und der **vierte 0–10-V-Ausgang**.
+IN4 und OUT4 sind hier Funktionsbezeichnungen; die Beschriftung am tatsächlichen Board beachten.
 
 | Von | Nach |
 | --- | --- |
-| Netzteil +24 V | CONTROLLINO VIN / Versorgung +24 V |
-| Netzteil 0 V / Minus | CONTROLLINO GND |
-| Netzteil +24 V | Erster Kontakt des Tasters |
-| Zweiter Kontakt des Tasters | CONTROLLINO **A0** |
-| CONTROLLINO **AO0** | 0–10-V-Steuereingang des Dimmers |
-| CONTROLLINO GND | Signalmasse des Dimmers |
+| Netzteil +12–24 V DC | DM4 Versorgung + |
+| Netzteil 0 V / Minus | DM4 Versorgung GND |
+| DM4 vierter digitaler Eingang IN4 | Erster Kontakt des Tasters |
+| Zweiter Kontakt des Tasters | DM4 GND der digitalen Eingänge |
+| DM4 vierter 0–10-V-Ausgang OUT4 (DAC D) | Dimmer 0–10-V-Steuereingang |
+| DM4 GND der Ausgänge | Dimmer Signalmasse |
+| DM4 RJ45 | Router/Switch für DHCP und OTA |
+| DM4 USB-C | PC für Erstinstallation und serielles Uhrstellen |
 
-Der Taster ist ein **Schliesser (NO)**: ungedrückt offen, gedrückt verbindet er +24 V mit A0.
-Verwende die **Schraubklemme A0**, nicht den Pinheader. Es ist kein zusätzlicher Pullup vorgesehen.
-Bei einem beleuchteten Taster sind die Anschlüsse für dessen Beleuchtung getrennt zu behandeln.
+Der Taster ist ein **potentialfreier Schliesser (NO)**. Ungedrückt offen, gedrückt verbindet er
+IN4 mit GND. **Die bisherige Verbindung des Tasters mit +24 V entfernen. Keine externe Spannung
+auf den digitalen Eingang geben.** Der DM4 stellt die Eingangsbeschaltung bereits bereit;
+kein externer Pull-up nötig. Die Eingänge werden über den PCF8574 aktiv LOW gelesen.
 
-**AO0** ist der erste analoge Ausgang. **AO1 bleibt unbenutzt.** AO0 muss im Spannungsmodus
-0–10 V bleiben; die Werkseinstellung wird durch vorhandene 0-Ω-Brücken bestimmt.
-Bei 17 % gibt die Firmware etwa 1,69 V aus, bei 100 % etwa 10 V, bei Aus 0 V.
+Nicht mit den analogen Eingängen A1–A4 oder freien ESP32-GPIOs verwechseln.
+Bei beleuchteten Tastern die Anschlüsse für die Beleuchtung getrennt behandeln.
+Ein normaler mechanischer Taster und seine zwei Leitungen können weiterverwendet werden.
 
-`DIM+` und `DIM−` im Diagramm sind beispielhafte Bezeichnungen. Der Dimmer muss einen
-aktiven 0–10-V-Spannungseingang besitzen, und sein Hersteller muss die gemeinsame Signalmasse
-zulassen. Ein reiner 1–10-V-Stromsenkenanschluss ist damit nicht automatisch kompatibel.
+OUT4 ist der vierte analoge Ausgang (MCP4728 Kanal D). OUT1–3 werden beim Firmwarestart auf 0 gesetzt.
+12-Bit-Sollwerte: 35 % = 1433/4095, nominal ca. 3,50 V; Service 80 % = 3276/4095, nominal ca. 8 V.
+Die DAC-Referenz ist intern mit Verstärkung 1× wie im KinCony-ESPHome-Beispiel.
+Diese Werte am vorhandenen Board vor Anschluss des Dimmers messen.
+
+`DIM+` und `DIM−` sind beispielhafte Bezeichnungen. Der Dimmer muss einen aktiven
+0–10-V-Spannungseingang unterstützen und die gemeinsame Signalmasse zulassen.
+Ein reiner 1–10-V-Stromsenkenanschluss ist nicht automatisch kompatibel.
 Für vollständiges Ausschalten muss der Dimmer bei 0 V abschalten können.
 Dimmer-Versorgung und LED-Leistungsanschlüsse richten sich nach dessen Modell und sind nicht dargestellt.
 
-Geprüfte Herstellerunterlagen:
+Die vor unserer Firmware laufende Werksfirmware sowie im DAC-EEPROM gespeicherte Werte können
+andere Ausgangsspannungen erzeugen. Den ersten Upload und die Spannungsprüfung ohne angeschlossenen
+Dimmer durchführen. Erst ab erfolgreicher Initialisierung kontrolliert unsere Firmware die Ausgänge.
+Beim OTA-Update wird OUT4 abgeschaltet; nach Neustart gilt der gespeicherte Modus und aktuelle Zeitplan.
 
-- [MAXI Automation Pinout](https://www.controllino.com/wp-content/uploads/2023/05/CONTROLLINO_MAXI_AUTOMATION_Pinout_Table.pdf)
-- [Analoge Ausgänge und Spannungs-/Strommodus](https://www.controllino.com/current-outputs-maxi-automation/)
+Eine SD-Karte ist nicht erforderlich. Die RTC benötigt zur Überbrückung von Stromausfällen
+eine zum Board passende Pufferbatterie; Typ und Polarität nach Herstellervorgabe beachten.
+USB ersetzt für den Betrieb der 0–10-V-Ausgangsstufe nicht die externe Versorgung.
+
+## Firmwarezuordnung
+
+| Baustein | Verbindung |
+| --- | --- |
+| I²C | SDA GPIO8, SCL GPIO18, 100 kHz |
+| Taster IN4 | PCF8574, Adresse 0x24, P3, aktiv LOW |
+| OUT4 | MCP4728, Adresse 0x60, Kanal D |
+| RTC | DS3231, Adresse 0x68 |
+| Ethernet W5500 | SCK GPIO1, MOSI GPIO2, MISO GPIO41, CS GPIO42, IRQ GPIO43, RESET GPIO44 |
+
+Quellen: [DM4-Produktbeschreibung](https://www.kincony.com/esp32s3-dimmer-module-dm4-4ch-dimmer.html),
+[Pinbelegung](https://www.kincony.com/forum/showthread.php?tid=8993),
+[Herstellerkonfiguration](https://www.kincony.com/forum/showthread.php?tid=8994).

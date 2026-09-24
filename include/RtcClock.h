@@ -1,16 +1,13 @@
 #pragma once
-#include <stdint.h>
-
-struct ClockTime {
-    uint8_t year, month, day, weekday, hour, minute, second;
-};
+#include "ClockTime.h"
+#include "I2cBus.h"
 
 class RtcClock {
 public:
-    void begin();
+    explicit RtcClock(I2cBus& bus) : bus_(bus) {}
     bool read(ClockTime& time);
     bool set(const ClockTime& time);
-    static bool valid(const ClockTime& time);
+    static bool valid(const ClockTime& time) { return validClockTime(time); }
 private:
-    void transfer(uint8_t address, uint8_t* bytes, uint8_t count, bool reading);
+    I2cBus& bus_;
 };

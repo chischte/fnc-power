@@ -1,4 +1,4 @@
-"""Set the PLC RTC from this computer's local wall clock over USB."""
+"""Set the DM4 RTC from this computer's local wall clock over USB."""
 import argparse
 from datetime import datetime
 import time
@@ -9,7 +9,7 @@ parser.add_argument('port', help='Serial port, e.g. COM5')
 args = parser.parse_args()
 try:
     with serial.Serial(args.port, 115200, timeout=0.5) as port:
-        time.sleep(3)  # Opening an AVR USB serial port can reset the controller.
+        time.sleep(3)  # Allow the controller to finish booting after a serial-port reset.
         port.reset_input_buffer()
         command = datetime.now().strftime('TIME %Y-%m-%d %H:%M:%S\n')
         port.write(command.encode('ascii'))

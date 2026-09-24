@@ -1,4 +1,5 @@
 #include "SerialClock.h"
+#include "ClockTimeText.h"
 #include <string.h>
 
 bool SerialClock::execute() {
@@ -14,24 +15,11 @@ bool SerialClock::execute() {
         Serial.println(result);
         return false;
     }
-    // Fixed-width parsing rejects incomplete dates, signs and trailing garbage.
-    const char pattern[] = "TIME 2000-00-00 00:00:00";
-    if (length_ != sizeof(pattern) - 1) {
-        Serial.println(F("ERR use TIME YYYY-MM-DD HH:MM:SS or TIME?"));
+    ClockTime time;
+    if (strncmp(buffer_, "TIME ", 5) != 0 || !parseClockTime(buffer_ + 5, time)) {
+        Serial.println(F("ERR use TIME YYYY-MM-DD HH:MM:SS (2000-2099) or TIME?"));
         return false;
     }
-    for (uint8_t i = 0; i < length_; ++i) {
-        const bool digit = pattern[i] == '0' && i != 6;
-        if ((digit && (buffer_[i] < '0' || buffer_[i] > '9')) ||
-            (!digit && buffer_[i] != pattern[i])) {
-            Serial.println(F("ERR invalid TIME format (2000-2099)"));
-            return false;
-        }
-    }
-    const auto pair = [this](uint8_t i) -> uint8_t {
-        return (buffer_[i] - '0') * 10 + buffer_[i + 1] - '0';
-    };
-    const ClockTime time = {pair(7), pair(10), pair(13), 0, pair(16), pair(19), pair(22)};
     const bool success = clock_.set(time);
     Serial.println(success ? F("OK TIME") : F("ERR invalid date or RTC write failed"));
     return success;

@@ -1,73 +1,181 @@
 #include <Arduino.h>
-#include <Controllino.h>
-#include <EEPROM.h>
 #include <Control.h>
+#include "Dm4Hardware.h"
+#include "ModeStore.h"
+#include "NetworkServices.h"
+#include "NetworkClock.h"
 #include "RtcClock.h"
 #include "SerialClock.h"
+#include "StatusPage.h"
 
 namespace {
-constexpr uint8_t dimmerPin = CONTROLLINO_AO0;
-constexpr uint8_t buttonPin = CONTROLLINO_A0;
-constexpr int modeAddress = 0;
-constexpr uint8_t disabledMarker = 0xA5;
-constexpr uint8_t automaticMarker = 0x5A;
 constexpr uint32_t clockPollMs = 200;
+constexpr uint32_t inputPollMs = 5;
+constexpr uint32_t hardwareRetryMs = 1000;
+constexpr uint32_t rtcSetRetryMs = 30000;
+static_assert(Config::outputRange == Dm4::dacMaximum, "Control and DAC ranges must match");
 
 class Application {
 public:
     void begin() {
-        pinMode(dimmerPin, OUTPUT);
-        analogWrite(dimmerPin, 0);
-        pinMode(buttonPin, INPUT);
         Serial.begin(115200);
-        control_ = LightControl(EEPROM.read(modeAddress) == disabledMarker);
-        clock_.begin();
+        initializeHardware();
+        if (!mode_.begin()) Serial.println("ERR NVS; mode changes cannot be saved");
+        control_ = LightControl(mode_.disabled());
         refreshClock();
-        Serial.println(F("fnc-power ready; TIME? or TIME YYYY-MM-DD HH:MM:SS"));
+        network_.begin([this]() {
+            button_ = Button();
+            buttonArmed_ = false;
+            return hardware_.writeOutput(0);
+        });
+        statusPage_.begin([this]() { return status(); }, [this](const ClockTime& time) {
+            const bool success = clock_.set(time);
+            refreshClock();
+            return success;
+        });
+        Serial.println("fnc-power DM4 ready; TIME? or TIME YYYY-MM-DD HH:MM:SS");
     }
+
     void update() {
+        network_.update();
+        if (network_.updating()) return;
         const uint32_t now = millis();
         if (serial_.poll() || uint32_t(now - clockAt_) >= clockPollMs) {
             clockAt_ = now;
             refreshClock();
         }
+        statusPage_.update();
+        if (!hardwareReady_) {
+            if (uint32_t(now - hardwareAt_) >= hardwareRetryMs) initializeHardware();
+            return;
+        }
+        if (uint32_t(now - inputAt_) < inputPollMs) return;
+        inputAt_ = now;
+        updateButton(now);
+        output_ = control_.output(now, hour_, clockValid_, minute_);
+        const bool outputOk = hardware_.writeOutput(output_);
+        reportChange(outputOk, outputOk_, "DAC OK", "ERR DAC; output may retain last voltage");
+    }
+
+private:
+    DeviceStatus status() const {
+        DeviceStatus result;
+        result.time = clockTime_;
+        result.clockValid = clockValid_;
+        result.rtcValid = rtcValid_;
+        result.rtcSetFromNetwork = rtcSetFromNetwork_;
+        result.disabled = control_.disabled();
+        result.service = control_.serviceActive();
+        result.feedback = control_.feedbackActive();
+        result.scheduledOn = clockValid_ && Config::isScheduledOn(
+            hour_ * Config::minutesPerHour + minute_, Config::onTime, Config::offTime);
+        result.hardwareOk = hardwareReady_;
+        result.outputOk = hardwareReady_ && outputOk_;
+        result.output = output_;
+        result.outputMaximum = Config::outputRange;
+        result.onTime = Config::onTime;
+        result.offTime = Config::offTime;
+        return result;
+    }
+
+    void initializeHardware() {
+        hardwareAt_ = millis();
+        if (!busReady_) {
+            busReady_ = Wire.begin(Dm4::sda, Dm4::scl, Dm4::i2cFrequency);
+            Wire.setTimeOut(Dm4::i2cTimeoutMs);
+        }
+        hardwareReady_ = busReady_ && hardware_.begin();
+        Serial.println(hardwareReady_ ? "DM4 I/O OK" : "ERR DM4 I/O; retry in 1 second");
+    }
+
+    void updateButton(uint32_t now) {
+        bool pressed;
+        const bool inputOk = hardware_.readButton(pressed);
+        reportChange(inputOk, inputOk_, "INPUT OK", "ERR INPUT; waiting for valid released button");
+        if (!inputOk) {
+            button_ = Button();
+            buttonArmed_ = false;
+            return;
+        }
+        // A bus fault or held button at boot must not cause a synthetic press.
+        if (!buttonArmed_) {
+            buttonArmed_ = !pressed;
+            return;
+        }
         const uint32_t longPressMs = control_.disabled()
             ? Config::enableLongPressMs : Config::disableLongPressMs;
-        const ButtonEvent event = button_.update(digitalRead(buttonPin) == HIGH, now, longPressMs);
+        const ButtonEvent event = button_.update(pressed, now, longPressMs);
         control_.handle(event, now);
         if (event == ButtonEvent::longPress) {
-            EEPROM.update(modeAddress, control_.disabled() ? disabledMarker : automaticMarker);
-            Serial.println(control_.disabled() ? F("MODE OFF") : F("MODE AUTO"));
+            if (!mode_.save(control_.disabled())) Serial.println("ERR NVS; mode was not saved");
+            Serial.println(control_.disabled() ? "MODE OFF" : "MODE AUTO");
         }
-        analogWrite(dimmerPin, control_.output(now, hour_, clockValid_, minute_));
     }
-private:
+
     void refreshClock() {
         ClockTime time;
-        const bool valid = clock_.read(time);
-        if (valid != clockValid_ || !clockChecked_) {
-            Serial.println(valid ? F("RTC OK") : F("ERR RTC invalid; schedule OFF until TIME is set"));
+        rtcValid_ = clock_.read(time);
+        const bool networkValid = networkClock_.poll(!rtcValid_, network_.connected(), time);
+        if (!rtcValid_ && networkValid &&
+            (!rtcSetAttempted_ || uint32_t(millis() - rtcSetAt_) >= rtcSetRetryMs)) {
+            rtcSetAttempted_ = true;
+            rtcSetAt_ = millis();
+            rtcValid_ = clock_.set(time);
+            if (rtcValid_) {
+                rtcSetFromNetwork_ = true;
+                Serial.println("RTC set from NTP; RTC is now the primary clock");
+            } else Serial.println("ERR RTC write; using NTP clock, retry in 30 seconds");
         }
+        if (rtcValid_) rtcSetAttempted_ = false;
+        const bool valid = rtcValid_ || networkValid;
+        if (valid != clockValid_ || !clockChecked_)
+            Serial.println(valid ? "TIME OK" : "TIME unknown; automatic light stays ON, waiting for NTP");
         clockChecked_ = true;
         clockValid_ = valid;
         if (valid) {
+            clockTime_ = time;
             hour_ = time.hour;
             minute_ = time.minute;
         }
     }
+
+    static void reportChange(bool ok, bool& previous, const char* recovery, const char* error) {
+        if (ok != previous) Serial.println(ok ? recovery : error);
+        previous = ok;
+    }
+
+    I2cBus bus_{Wire};
+    Dm4Hardware hardware_{Wire, bus_};
+    RtcClock clock_{bus_};
+    SerialClock serial_{clock_};
+    ModeStore mode_;
+    NetworkServices network_;
+    NetworkClock networkClock_;
+    StatusPage statusPage_;
+    ClockTime clockTime_{};
     Button button_;
     LightControl control_;
-    RtcClock clock_;
-    SerialClock serial_{clock_};
     uint32_t clockAt_ = 0;
+    uint32_t inputAt_ = 0;
+    uint32_t hardwareAt_ = 0;
+    uint32_t rtcSetAt_ = 0;
     uint8_t hour_ = 0;
     uint8_t minute_ = 0;
+    uint16_t output_ = 0;
     bool clockValid_ = false;
+    bool rtcValid_ = false;
+    bool rtcSetAttempted_ = false;
+    bool rtcSetFromNetwork_ = false;
     bool clockChecked_ = false;
+    bool hardwareReady_ = false;
+    bool busReady_ = false;
+    bool buttonArmed_ = false;
+    bool inputOk_ = true;
+    bool outputOk_ = true;
 };
 
 Application& application() {
-    // Arduino requires free setup/loop callbacks; keep shared state inside one owner.
+    // Arduino requires free setup/loop callbacks; keep state inside one owner.
     static Application instance;
     return instance;
 }

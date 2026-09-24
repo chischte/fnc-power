@@ -1,4 +1,4 @@
-"""Compile and exercise the actual C++ control logic without a connected PLC."""
+"""Compile and exercise C++ control logic and RTC decoding without a board."""
 import ctypes
 import os
 from pathlib import Path

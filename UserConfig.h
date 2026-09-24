@@ -1,6 +1,6 @@
 #pragma once
 
-// Nach Änderungen neu bauen und auf den CONTROLLINO hochladen.
+// Nach Änderungen neu bauen und auf den KinCony DM4 hochladen.
 namespace PowerConfig {
 // Absolute Prozentwerte des 0–10-V-Ausgangs; 100 % entsprechen 10 V.
 // Minimale Beleuchtungsstärke bei verschiedenen Prozentwerten (in der Box gemessen):
