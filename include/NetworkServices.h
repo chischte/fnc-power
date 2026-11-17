@@ -6,7 +6,8 @@
 
 class NetworkServices {
 public:
-    void begin(std::function<bool()> prepareUpdate);
+    void begin(std::function<bool()> prepareUpdate, const String& hostname);
+    void setHostname(const String& hostname);
     void update();
     bool updating() const { return updating_; }
     bool connected() const { return uint32_t(ethernetIp_) != 0 || uint32_t(wifiIp_) != 0; }
@@ -24,4 +25,6 @@ private:
     bool ethernetStarted_ = false;
     bool otaStarted_ = false;
     bool updating_ = false;
+    bool mdnsStarted_ = false;
+    String hostname_;
 };

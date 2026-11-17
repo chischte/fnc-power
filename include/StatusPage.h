@@ -4,6 +4,8 @@
 #include "ClockTime.h"
 
 struct DeviceStatus {
+    String hostname;
+    int brightness = 0;
     ClockTime time{};
     bool clockValid = false;
     bool rtcValid = false;
@@ -22,11 +24,13 @@ struct DeviceStatus {
 
 class StatusPage {
 public:
-    void begin(std::function<DeviceStatus()> status, std::function<bool(const ClockTime&)> setTime);
+    void begin(std::function<DeviceStatus()> status, std::function<bool(const ClockTime&)> setTime,
+               std::function<bool(const String&, const String&)> command);
     void update();
 private:
     void respond();
     void respondTime();
+    void respondCommand();
     void sendResponse(const char* result, const String& body);
     String header(const char* name) const;
     void closeClient();
@@ -34,6 +38,7 @@ private:
     NetworkClient client_;
     std::function<DeviceStatus()> status_;
     std::function<bool(const ClockTime&)> setTime_;
+    std::function<bool(const String&, const String&)> command_;
     String request_;
     String response_;
     size_t sent_ = 0;

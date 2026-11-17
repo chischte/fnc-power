@@ -2,6 +2,7 @@
 #include "ClockTimeText.h"
 #include "NetworkConfig.h"
 #include <errno.h>
+#include <UserConfig.h>
 #include <sys/socket.h>
 
 namespace {
@@ -50,7 +51,9 @@ String render(const DeviceStatus& status) {
 }
 
 void StatusPage::begin(std::function<DeviceStatus()> status,
-                       std::function<bool(const ClockTime&)> setTime) {
+                       std::function<bool(const ClockTime&)> setTime,
+                       std::function<bool(const String&, const String&)> command) {
+    command_ = command;
     status_ = status;
     setTime_ = setTime;
     server_.begin();
@@ -64,6 +67,27 @@ void StatusPage::closeClient() {
 }
 
 void StatusPage::respond() {
+    if (request_.startsWith("GET /api/status HTTP/1.")) {
+        const auto s = status_();
+        char json[700];
+        snprintf(json, sizeof(json),
+            "{\"hostname\":\"%s\",\"brightness\":%d,\"default\":%d,\"maximum\":%d,"
+            "\"output\":%.1f,\"service\":%s,\"disabled\":%s,\"clockValid\":%s,"
+            "\"time\":\"%02u:%02u:%02u\",\"on\":\"%02u:%02u\",\"off\":\"%02u:%02u\",\"hardwareOk\":%s,\"outputOk\":%s}",
+            s.hostname.c_str(), s.brightness, PowerConfig::brightnessPercent, PowerConfig::maxBrightnessPercent,
+            100.0 * s.output / s.outputMaximum, s.service ? "true" : "false",
+            s.disabled ? "true" : "false", s.clockValid ? "true" : "false",
+            s.time.hour, s.time.minute, s.time.second, s.onTime/60, s.onTime%60,
+            s.offTime/60, s.offTime%60, s.hardwareOk ? "true" : "false", s.outputOk ? "true" : "false");
+        sendResponse("200 OK", json);
+        response_.replace("text/html", "application/json");
+        return;
+    }
+    if (request_.startsWith("POST /api/control HTTP/1.")) {
+        respondCommand();
+        return;
+    }
+
     if (request_.startsWith("POST /time HTTP/1.")) {
         respondTime();
         return;
@@ -160,4 +184,17 @@ void StatusPage::update() {
     }
     sent_ += written;
     if (sent_ == response_.length()) closeClient();
+}
+
+void StatusPage::respondCommand() {
+    if (!NetworkConfig::ota_password[0] || header("X-OTA-Password") != NetworkConfig::ota_password) {
+        sendResponse("403 Forbidden", "Forbidden");
+        return;
+    }
+    if (header("Content-Length") != "0" || !header("Transfer-Encoding").isEmpty()) {
+        sendResponse("400 Bad Request", "Empty body required");
+        return;
+    }
+    const bool ok = command_(header("X-Command"), header("X-Value"));
+    sendResponse(ok ? "200 OK" : "400 Bad Request", ok ? "OK" : "Invalid value or storage failure");
 }

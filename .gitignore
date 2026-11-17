@@ -4,3 +4,6 @@
 __pycache__/
 network.local.json
 wifi-credentials.h
+
+viewer.devices.local.json
+viewer.devices.local.tmp

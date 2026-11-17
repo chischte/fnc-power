@@ -1,4 +1,5 @@
 #include <Control.h>
+#include "ScheduleText.h"
 #include "RtcRegisters.h"
 #include "ClockTimeText.h"
 #define CHECK(condition) do { if (!(condition)) return __LINE__; } while (false)
@@ -554,5 +555,44 @@ TEST ds3231_twelve_hour_mode() {
     CHECK(!RtcRegisters::decode(raw, time));
     raw[2] = 0x24;
     CHECK(!RtcRegisters::decode(raw, time));
+    return 0;
+}
+
+TEST runtime_brightness_and_service() {
+    LightControl light;
+    CHECK(light.output(0, 21, true) == Config::nightOutput);
+    light.setBrightness(50);
+    CHECK(light.output(0, 21, true) == Config::nightOutput);
+    CHECK(light.output(60000, 21, true) == Config::percentOutput(50, 100));
+    light.setService(true, 60000);
+    light.setService(true, 61000);
+    CHECK(light.output(65000, 21, true) == Config::serviceOutput);
+    light.setService(false, 65000);
+    CHECK(light.output(65000, 21, true) == Config::percentOutput(50, 100));
+    light.setBrightness(35);
+    CHECK(light.output(65000, 21, false) == Config::nightOutput);
+    return 0;
+}
+
+TEST runtime_schedule() {
+    LightControl light;
+    light.setSchedule(9 * 60, 17 * 60);
+    CHECK(light.output(0, 10, true) == Config::nightOutput);
+    light.setSchedule(20 * 60, 8 * 60);
+    CHECK(light.output(0, 10, true) == Config::nightOutput);
+    CHECK(light.output(60000, 10, true) == 0);
+    CHECK(light.output(60000, 21, true) == 0);
+    CHECK(light.output(120000, 21, true) == Config::nightOutput);
+    light.setSchedule(0, 0);
+    light.output(120000, 21, true);
+    CHECK(light.output(180000, 21, true) == 0);
+    uint16_t minutes;
+    CHECK(parseScheduleTime("23:59", minutes) && minutes == 1439);
+    CHECK(parseScheduleTime("00:00", minutes) && minutes == 0);
+    CHECK(!parseScheduleTime("24:00", minutes));
+    CHECK(!parseScheduleTime("20:60", minutes));
+    CHECK(!parseScheduleTime("2:00", minutes));
+    CHECK(!parseScheduleTime("", minutes));
+    CHECK(!parseScheduleTime("20:00x", minutes));
     return 0;
 }

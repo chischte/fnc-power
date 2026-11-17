@@ -34,7 +34,7 @@ Ungültige Prozentwerte, Stunden oder Minuten erzeugen beim Build eine Fehlermel
 Die automatischen Übergänge dauern weiterhin 60 Sekunden.
 
 Nach Änderungen per USB oder OTA neu bauen und hochladen (siehe unten).
-Die Werte sind Build-Konfiguration und werden nicht zur Laufzeit vom Gerät aus einer Datei gelesen.
+Die Werte sind Build-Defaults. Die Automatikhelligkeit kann der Viewer dauerhaft im NVS ueberschreiben und auf den Build-Default zuruecksetzen.
 Die folgenden Verhaltensangaben beschreiben die Standardkonfiguration.
 
 ## Verhalten
@@ -194,7 +194,7 @@ Die Seite aktualisiert sich alle fünf Sekunden. Die Spannung wird aus dem Sollw
 berechnet; sie ist keine Messung am Ausgang. Bei Schreibfehlern kann die tatsächliche
 Ausgangsspannung vom Sollwert abweichen.
 
-Die Seite ist im lokalen Netzwerk ohne Anmeldung lesbar. Das Uhrstellen über das separate
+Die Seite und GET /api/status sind im lokalen Netzwerk ohne Anmeldung lesbar. Das Uhrstellen über das separate
 Werkzeug benötigt das konfigurierte OTA-Passwort. Während eines OTA-Uploads ist die Seite nicht verfügbar.
 `Zeitplan EIN` bei `Automatik freigegeben: Nein` bedeutet, dass der gespeicherte
 Aus-Modus die Automatik übersteuert. Ohne gültige Zeit bleibt die Automatik dauerhaft
@@ -308,3 +308,44 @@ Hardwareanbindung übernehmen und an die aktuelle Steuerlogik anpassen; der akti
 - [DM4: Eingänge, DAC-Referenz und LAN-Konfiguration](https://www.kincony.com/forum/showthread.php?tid=8994)
 - [Microchip MCP4728: 12-Bit-DAC](https://www.microchip.com/en-us/product/mcp4728)
 - [Analog Devices DS3231: Datenblatt](https://www.analog.com/media/en/technical-documentation/data-sheets/ds3231.pdf)
+
+## Licht-Viewer und mehrere DM4
+
+Start: `python tools/light_viewer.py` (Abhaengigkeit: `pip install -r tools/viewer-requirements.txt`).
+Desktop-Verknuepfung mit Lampensymbol: `powershell -ExecutionPolicy Bypass -File tools/install_viewer_shortcut.ps1`.
+Der Viewer findet aktualisierte DM4 per `_fnc-light._tcp.local.`; zwei feste Spalten zeigen je ein Geraet anhand seines `.local`-Namens. IP-Adressen erscheinen nur im Infotext. Die Suche wird alle 30 Sekunden wiederholt.
+Er zeigt lokale Uhrzeit, Ein-/Ausschaltzeiten, Modus, Ausgangssollwert und Automatikhelligkeit.
+Ein- und Ausschaltzeit lassen sich im Viewer im Format HH:MM aendern und werden gemeinsam dauerhaft im NVS gespeichert. UserConfig.h liefert die Startwerte. Gleiche Zeiten deaktivieren den Zeitplan.
+
+Jedes neue Geraet bekommt `<hostname>-<MAC>.local`. Der Viewer kann den DNS-Namen dauerhaft
+umbenennen (Kleinbuchstaben, Ziffern, Bindestriche, maximal 63 Zeichen); fuer jedes Geraet einen
+anderen Namen verwenden. Die Umbenennung aktualisiert mDNS ohne Neustart. mDNS funktioniert im
+lokalen Multicast-Netz; ueber getrennte VLANs ist ein mDNS-Reflector erforderlich.
+OTA-Uploads deshalb mit `--upload-port <neuer-name>.local` oder der IP ausfuehren.
+
+Die Automatikhelligkeit wird im NVS gespeichert, bleibt nach Neustart erhalten und ist auf das
+konfigurierte Maximum begrenzt. Default setzt sie auf PowerConfig::brightnessPercent (35 %) zurueck.
+Aenderungen waehrend der Einschaltzeit verwenden die 60-Sekunden-Rampe; tagsueber bleibt das Licht aus.
+Servicemodus startet manuell fuer zehn Minuten und laesst sich vorzeitig beenden.
+Schreibzugriffe verwenden das OTA-Passwort aus network.local.json; nur im vertrauten lokalen Netz.
+
+API: GET /api/status liefert JSON. POST /api/control benoetigt einen leeren Body (Content-Length: 0),
+X-OTA-Password, X-Command (name, brightness, reset, service) und X-Value (DNS-Name, Prozentzahl,
+bzw. on/off). Das Passwort wird nicht im Viewer angezeigt.
+Der zweite DM4 muss fuer den ersten Upload extern versorgt und per USB-Datenkabel verbunden sein.
+Gleiche Firmware und Partitionierung koennen fuer beide DM4 verwendet werden.
+
+Falls Windows Multicast-Antworten blockiert, sucht der Viewer beim Start zusaetzlich per
+Unicast-mDNS im privaten /24-Netz der eingegebenen Startadresse. Die Startadresse des
+bestehenden Geraets ist 192.168.31.182; bei einem Netzwechsel eine erreichbare Adresse eingeben.
+Am 17.11.2026 wurde der erste DM4 per OTA aktualisiert und als fnc-licht-1.local eingerichtet.
+OTA ueber diesen Namen, NVS-Namen nach Neustart, mDNS-Erkennung und Helligkeit/Default wurden geprueft.
+Der zweite DM4 wartet noch auf externe Versorgung und den ersten USB-Upload.
+
+Schaltzeiten-API: X-Command: schedule, X-Value: HH:MM,HH:MM (EIN,AUS).
+Beide Zeiten werden als gemeinsamer NVS-Wert gespeichert. Aenderungen ueber eine
+Schaltgrenze verwenden die normale 60-Sekunden-Rampe.
+
+FNC Light zeigt fest zwei Geraetespalten. Der zweite DM4 wird nach der Einrichtung automatisch der zweiten Spalte zugeordnet; bis dahin wird er als offline angezeigt.
+
+FNC Light verwendet fest die Dark-Mode-Palette des fnc-fogger-Viewers. Die beiden Geraetezuordnungen bleiben lokal in viewer.devices.local.json erhalten; die Datei enthaelt keine Zugangsdaten.

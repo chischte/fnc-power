@@ -7,6 +7,8 @@
 #include "RtcClock.h"
 #include "SerialClock.h"
 #include "StatusPage.h"
+#include "DeviceSettings.h"
+#include "ScheduleText.h"
 
 namespace {
 constexpr uint32_t clockPollMs = 200;
@@ -22,16 +24,21 @@ public:
         initializeHardware();
         if (!mode_.begin()) Serial.println("ERR NVS; mode changes cannot be saved");
         control_ = LightControl(mode_.disabled());
+        settings_.begin();
+        control_.setBrightness(settings_.brightness());
+        control_.setSchedule(settings_.onTime(), settings_.offTime());
         refreshClock();
         network_.begin([this]() {
             button_ = Button();
             buttonArmed_ = false;
             return hardware_.writeOutput(0);
-        });
+        }, settings_.hostname());
         statusPage_.begin([this]() { return status(); }, [this](const ClockTime& time) {
             const bool success = clock_.set(time);
             refreshClock();
             return success;
+        }, [this](const String& command, const String& value) {
+            return applyCommand(command, value);
         });
         Serial.println("fnc-power DM4 ready; TIME? or TIME YYYY-MM-DD HH:MM:SS");
     }
@@ -58,8 +65,42 @@ public:
     }
 
 private:
+    bool applyCommand(const String& command, const String& value) {
+        if (command == "schedule") {
+            uint16_t on, off;
+            if (value.length() != 11 || value[5] != ',' ||
+                !parseScheduleTime(value.substring(0, 5).c_str(), on) ||
+                !parseScheduleTime(value.substring(6).c_str(), off)) return false;
+            if (!settings_.setSchedule(on, off)) return false;
+            control_.setSchedule(on, off);
+            return true;
+        }
+        if (command == "name") {
+            if (!settings_.rename(value)) return false;
+            network_.setHostname(settings_.hostname());
+            return true;
+        }
+        if (command == "service" && (value == "on" || value == "off")) {
+            control_.setService(value == "on", millis());
+            return true;
+        }
+        if (command != "brightness" && command != "reset") return false;
+        int percent = PowerConfig::brightnessPercent;
+        if (command == "brightness") {
+            if (value.isEmpty() || value.length() > 3) return false;
+            for (unsigned i = 0; i < value.length(); ++i)
+                if (value[i] < '0' || value[i] > '9') return false;
+            percent = value.toInt();
+        }
+        if (!settings_.setBrightness(percent)) return false;
+        control_.setBrightness(percent);
+        return true;
+    }
+
     DeviceStatus status() const {
         DeviceStatus result;
+        result.hostname = settings_.hostname();
+        result.brightness = settings_.brightness();
         result.time = clockTime_;
         result.clockValid = clockValid_;
         result.rtcValid = rtcValid_;
@@ -68,13 +109,13 @@ private:
         result.service = control_.serviceActive();
         result.feedback = control_.feedbackActive();
         result.scheduledOn = clockValid_ && Config::isScheduledOn(
-            hour_ * Config::minutesPerHour + minute_, Config::onTime, Config::offTime);
+            hour_ * Config::minutesPerHour + minute_, settings_.onTime(), settings_.offTime());
         result.hardwareOk = hardwareReady_;
         result.outputOk = hardwareReady_ && outputOk_;
         result.output = output_;
         result.outputMaximum = Config::outputRange;
-        result.onTime = Config::onTime;
-        result.offTime = Config::offTime;
+        result.onTime = settings_.onTime();
+        result.offTime = settings_.offTime();
         return result;
     }
 
@@ -149,6 +190,7 @@ private:
     RtcClock clock_{bus_};
     SerialClock serial_{clock_};
     ModeStore mode_;
+    DeviceSettings settings_;
     NetworkServices network_;
     NetworkClock networkClock_;
     StatusPage statusPage_;

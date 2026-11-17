@@ -71,14 +71,16 @@ private:
 
 class AutomaticLight {
 public:
+    void setBrightness(uint16_t value) { brightness_ = value; }
+    void setSchedule(uint16_t on, uint16_t off) { onTime_ = on; offTime_ = off; }
     uint16_t output(uint32_t now, uint8_t hour, bool clockValid, uint8_t minute = 0) {
         if (!clockValid || hour > 23 || minute > 59) {
             initialized_ = false;
-            return Config::nightOutput;
+            return brightness_;
         }
         const uint16_t time = hour * Config::minutesPerHour + minute;
-        const uint16_t target = Config::isScheduledOn(time, Config::onTime, Config::offTime)
-            ? Config::nightOutput : 0;
+        const uint16_t target = Config::isScheduledOn(time, onTime_, offTime_)
+            ? brightness_ : 0;
         if (!initialized_) {
             initialized_ = true;
             from_ = target_ = target;
@@ -99,6 +101,9 @@ private:
         const int32_t difference = int32_t(target_) - from_;
         return from_ + difference * int32_t(elapsed) / int32_t(Config::automaticFadeMs);
     }
+    uint16_t onTime_ = Config::onTime;
+    uint16_t offTime_ = Config::offTime;
+    uint16_t brightness_ = Config::nightOutput;
     bool initialized_ = false;
     uint16_t from_ = 0;
     uint16_t target_ = 0;
@@ -171,6 +176,13 @@ public:
         const uint16_t automaticOutput = automatic_.output(now, hour, clockValid, minute);
         lastOutput_ = currentOutput(now, automaticOutput);
         return lastOutput_;
+    }
+    void setSchedule(uint16_t on, uint16_t off) { automatic_.setSchedule(on, off); }
+    void setBrightness(int percent) {
+        automatic_.setBrightness(Config::percentOutput(percent, PowerConfig::maxBrightnessPercent));
+    }
+    void setService(bool enabled, uint32_t now) {
+        if (service_ != enabled) handle(ButtonEvent::shortPress, now);
     }
     bool disabled() const { return disabled_; }
     bool serviceActive() const { return service_; }

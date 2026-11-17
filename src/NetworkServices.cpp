@@ -2,6 +2,7 @@
 #include "Dm4Board.h"
 #include "NetworkConfig.h"
 #include <WiFi.h>
+#include <ESPmDNS.h>
 
 namespace {
 constexpr uint32_t connectionPollMs = 500;
@@ -9,8 +10,10 @@ constexpr uint32_t ethernetRetryMs = 30000;
 constexpr int otaTimeoutMs = 5000;
 }
 
-void NetworkServices::begin(std::function<bool()> prepareUpdate) {
-    ota_.setHostname(NetworkConfig::hostname);
+void NetworkServices::begin(std::function<bool()> prepareUpdate, const String& hostname) {
+    hostname_ = hostname;
+    ota_.setMdnsEnabled(false);
+    ota_.setHostname(hostname_.c_str());
     ota_.setPassword(NetworkConfig::ota_password);
     ota_.setTimeout(otaTimeoutMs);
     ota_.onStart([this, prepareUpdate]() {
@@ -35,7 +38,7 @@ void NetworkServices::begin(std::function<bool()> prepareUpdate) {
     if (NetworkConfig::wifi_ssid[0]) {
         WiFi.persistent(false);
         WiFi.mode(WIFI_STA);
-        WiFi.setHostname(NetworkConfig::hostname);
+        WiFi.setHostname(hostname_.c_str());
         WiFi.setAutoReconnect(true);
         WiFi.begin(NetworkConfig::wifi_ssid, NetworkConfig::wifi_password);
     }
@@ -47,7 +50,7 @@ void NetworkServices::startEthernet() {
     constexpr int phyAddress = 1;
     ethernetStarted_ = ethernet_.begin(ETH_PHY_W5500, phyAddress, Dm4::ethernetCs,
                                       Dm4::ethernetIrq, Dm4::ethernetReset, spi_);
-    if (ethernetStarted_) ethernet_.setHostname(NetworkConfig::hostname);
+    if (ethernetStarted_) ethernet_.setHostname(hostname_.c_str());
     else Serial.println("ERR Ethernet initialization; retry in 30 seconds");
 }
 
@@ -64,6 +67,17 @@ void NetworkServices::pollConnections() {
         Serial.printf("WiFi IP %s\n", wifiIp.toString().c_str());
     }
     const bool connected = uint32_t(ethernetIp) != 0 || uint32_t(wifiIp) != 0;
+    if (connected && !mdnsStarted_) {
+        mdnsStarted_ = MDNS.begin(hostname_.c_str());
+        if (mdnsStarted_) {
+            MDNS.addService("http", "tcp", 80);
+            if (NetworkConfig::ota_password[0]) MDNS.enableArduino(3232, true);
+            MDNS.addService("fnc-light", "tcp", 80);
+        }
+    } else if (!connected && mdnsStarted_) {
+        MDNS.end();
+        mdnsStarted_ = false;
+    }
     if (connected && !otaStarted_ && NetworkConfig::ota_password[0]) {
         ota_.begin();
         otaStarted_ = true;
@@ -84,4 +98,13 @@ void NetworkServices::update() {
         pollConnections();
     }
     if (otaStarted_) ota_.handle();
+}
+
+void NetworkServices::setHostname(const String& hostname) {
+    hostname_ = hostname;
+    ota_.setHostname(hostname_.c_str());
+    WiFi.setHostname(hostname_.c_str());
+    if (ethernetStarted_) ethernet_.setHostname(hostname_.c_str());
+    if (mdnsStarted_) MDNS.end();
+    mdnsStarted_ = false;
 }
