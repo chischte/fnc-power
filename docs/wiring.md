@@ -1,61 +1,70 @@
-# Anschlussplan KinCony DM4
+# Anschlussplan FNC Power
 
-![Anschlussplan für Taster und 0–10-V-Dimmer](wiring.svg)
+![Anschlussplan KinCony DM4](wiring.svg)
 
-Die Zeichnung zeigt Verbindungen, nicht die räumliche Position der Klemmen.
-Verwendet werden der **vierte digitale Eingang** und der **vierte 0–10-V-Ausgang**.
-IN4 und OUT4 sind hier Funktionsbezeichnungen; die Beschriftung am tatsächlichen Board beachten.
+Der Plan zeigt die Funktionsanschluesse, nicht die raeumliche Klemmenanordnung.
+Pro Lichtsteuerung werden **IN4** und **OUT4 / 0-10V** verwendet.
 
-| Von | Nach |
+| Verbindung | Kabelfarbe |
 | --- | --- |
-| Netzteil +12–24 V DC | DM4 Versorgung + |
-| Netzteil 0 V / Minus | DM4 Versorgung GND |
-| DM4 vierter digitaler Eingang IN4 | Erster Kontakt des Tasters |
-| Zweiter Kontakt des Tasters | DM4 GND der digitalen Eingänge |
-| DM4 vierter 0–10-V-Ausgang OUT4 (DAC D) | Dimmer 0–10-V-Steuereingang |
-| DM4 GND der Ausgänge | Dimmer Signalmasse |
-| DM4 RJ45 | Router/Switch für DHCP und OTA |
-| DM4 USB-C | PC für Erstinstallation und serielles Uhrstellen |
+| Netzteil +24V DC -> DM4 Versorgung + | Orange |
+| Netzteil 0V -> DM4 Versorgungs-GND | Schwarz |
+| Netzteil +24V DC -> LED-Dimmer Versorgung + | Orange |
+| Netzteil 0V -> LED-Dimmer Versorgungs-GND | Schwarz |
+| LED-Dimmer +24V OUT -> FNC Tower Connector 24V | Orange |
+| Netzteil 0V direkt -> FNC Tower Connector GND | Schwarz |
+| LED-Dimmer GND Dimmed -> FNC Tower Connector GND Dimmed | Grau |
+| DM4 digital IN4 -> NO-Taster, erster Kontakt | Blau |
+| NO-Taster, zweiter Kontakt -> DM4 Eingangs-GND | Weiss |
+| DM4 OUT4 / 0-10V -> Dimmer 0-10V IN / DIM+ | Violett |
+| DM4 Ausgangs-GND -> Dimmer Signal-GND / DIM- | Schwarz |
+| Netzspannung L -> Netzteil L | Braun |
+| Netzspannung N -> Netzteil N | Blau |
+| Schutzleiter PE -> Netzteil PE | Gelb dargestellt; reale Ader gelb-gruen |
 
-Der Taster ist ein **potentialfreier Schliesser (NO)**. Ungedrückt offen, gedrückt verbindet er
-IN4 mit GND. **Die bisherige Verbindung des Tasters mit +24 V entfernen. Keine externe Spannung
-auf den digitalen Eingang geben.** Der DM4 stellt die Eingangsbeschaltung bereits bereit;
-kein externer Pull-up nötig. Die Eingänge werden über den PCF8574 aktiv LOW gelesen.
+Der **potentialfreie Schliesser (NO)** verbindet beim Druecken IN4 mit Eingangs-GND.
+Keine 24V an IN4 anlegen. Die beiden NO-Adern haben keine Polaritaet; Blau/Weiss
+ist die Zuordnung dieses Plans. OUT1-3 bleiben unbenutzt.
 
-Nicht mit den analogen Eingängen A1–A4 oder freien ESP32-GPIOs verwechseln.
-Bei beleuchteten Tastern die Anschlüsse für die Beleuchtung getrennt behandeln.
-Ein normaler mechanischer Taster und seine zwei Leitungen können weiterverwendet werden.
+OUT4 liefert **analog 0-10V**, kein PWM-Signal. Die violette Ader fuehrt dieses
+Dimmsignal. Der Dimmer muss diesen aktiven Spannungseingang unterstuetzen und bei
+0V abschalten. DIM+/DIM- sind beispielhafte Klemmenbezeichnungen.
 
-OUT4 ist der vierte analoge Ausgang (MCP4728 Kanal D). OUT1–3 werden beim Firmwarestart auf 0 gesetzt.
-12-Bit-Sollwerte: 35 % = 1433/4095, nominal ca. 3,50 V; Service 100 % = 4095/4095, nominal ca. 10 V.
-Die DAC-Referenz ist intern mit Verstärkung 1× wie im KinCony-ESPHome-Beispiel.
-Diese Werte am vorhandenen Board vor Anschluss des Dimmers messen.
+230V AC (L, N, PE) speist das Netzteil in Feld 1. Die gelbe PE-Darstellung
+steht fuer die bestaetigte gelb-gruene Schutzleiterader.
 
-`DIM+` und `DIM−` sind beispielhafte Bezeichnungen. Der Dimmer muss einen aktiven
-0–10-V-Spannungseingang unterstützen und die gemeinsame Signalmasse zulassen.
-Ein reiner 1–10-V-Stromsenkenanschluss ist nicht automatisch kompatibel.
-Für vollständiges Ausschalten muss der Dimmer bei 0 V abschalten können.
-Dimmer-Versorgung und LED-Leistungsanschlüsse richten sich nach dessen Modell und sind nicht dargestellt.
+Feld 5 **FNC Tower Connector** hat die drei Anschlussfunktionen 24V, GND und GND Dimmed:
+24V und GND Dimmed kommen vom LED-Dimmer; der normale GND kommt direkt vom Netzteil.
+**GND Dimmed nicht mit normalem GND verbinden**, da dies den gedimmten Rueckleiter ueberbruecken wuerde.
+PE und DC-GND sind getrennte Funktionen; der Plan zeigt keine Verbindung zwischen beiden.
+Die Anschluesse sind funktional bezeichnet, die tatsaechlichen Klemmen nach Geraetebeschriftung zuordnen.
 
-Die vor unserer Firmware laufende Werksfirmware sowie im DAC-EEPROM gespeicherte Werte können
-andere Ausgangsspannungen erzeugen. Den ersten Upload und die Spannungsprüfung ohne angeschlossenen
-Dimmer durchführen. Erst ab erfolgreicher Initialisierung kontrolliert unsere Firmware die Ausgänge.
-Beim OTA-Update wird OUT4 abgeschaltet; nach Neustart gilt der gespeicherte Modus und aktuelle Zeitplan.
+## 24V-Verteiler in Feld 1
 
-Eine SD-Karte ist nicht erforderlich. Die RTC benötigt zur Überbrückung von Stromausfällen
-eine zum Board passende Pufferbatterie; Typ und Polarität nach Herstellervorgabe beachten.
-USB ersetzt für den Betrieb der 0–10-V-Ausgangsstufe nicht die externe Versorgung.
+- Netzteil: +24V
+- DM4: Versorgung +24V DC
+- LED-Dimmer: +24V IN und +24V OUT
+- FNC Tower Connector: 24V (physisch vom Dimmerausgang)
 
-## Firmwarezuordnung
+## GND-Verteiler in Feld 1
 
-| Baustein | Verbindung |
-| --- | --- |
-| I²C | SDA GPIO8, SCL GPIO18, 100 kHz |
-| Taster IN4 | PCF8574, Adresse 0x24, P3, aktiv LOW |
-| OUT4 | MCP4728, Adresse 0x60, Kanal D |
-| RTC | DS3231, Adresse 0x68 |
-| Ethernet W5500 | SCK GPIO1, MOSI GPIO2, MISO GPIO41, CS GPIO42, IRQ GPIO43, RESET GPIO44 |
+- Netzteil: 0V
+- DM4: Versorgungs-GND, Eingangs-GND und Signal-GND
+- LED-Dimmer: Versorgungs-GND und Signal-GND
+- NO-Taster: weisse Ader
+- FNC Tower Connector: GND
 
-Quellen: [DM4-Produktbeschreibung](https://www.kincony.com/esp32s3-dimmer-module-dm4-4ch-dimmer.html),
-[Pinbelegung](https://www.kincony.com/forum/showthread.php?tid=8993),
-[Herstellerkonfiguration](https://www.kincony.com/forum/showthread.php?tid=8994).
+Die beiden Verteiler sind direkt in Feld 1 beim Netzteil dargestellt. Die kurzen,
+offen endenden Linien mit 24V bzw. GND an den anderen Feldern gehoeren zum
+entsprechenden Verteiler. Die Signal-GND-Leitung zwischen DM4 und Dimmer sowie beide Tasterleitungen zum
+DM4 sind direkt und durchgehend gezeichnet. **GND Dimmed ist ein separates Netz** und wird an Dimmer und FNC Tower Connector
+mit kurzen grauen Leitungsstummeln dargestellt. Beim Dimmer liegen Steuer- und
+Versorgungseingaenge links, die Leistungsausgaenge rechts. PE gehoert nicht zu Common GND.
+
+SVG neu erzeugen: `python tools/build_wiring_diagram.py`.
+Erstinstallation, Ausgangspruefung und OTA: [README](../README.md).
+
+Quellen: [KinCony DM4](https://www.kincony.com/kincony-dm4-4ch-esp32-dimmer-board-released.html),
+[Hersteller-Pinbelegung](https://www.kincony.com/forum/showthread.php?tid=8993),
+[Herstellerkonfiguration](https://www.kincony.com/forum/showthread.php?tid=8994),
+[IEC 60445:2021, Schutzleiterkennzeichnung](https://standards.iteh.ai/catalog/standards/iec/7275345f-6850-44bf-a57f-02870c0e23d2/iec-60445-2021).

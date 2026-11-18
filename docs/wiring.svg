@@ -1,56 +1,168 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
-<title id="title">fnc-power – Anschlussplan</title>
-<desc id="desc">24-V-Netzteil an Versorgung und GND des KinCony DM4. Ein potentialfreier Schliessertaster verbindet IN4 mit GND. OUT4 geht zum 0–10-V-Eingang des Dimmers, GND zu dessen Signalmasse.</desc>
-<defs><style>
-text { font-family:Arial,sans-serif; fill:#172b40; font-size:18px }
-.title { font-size:30px; font-weight:bold }
-.heading { font-size:21px; font-weight:bold }
-.small { font-size:16px; fill:#465b70 }
-.terminal { fill:white; stroke:#172b40; stroke-width:2 }
-.wire { fill:none; stroke-width:4; stroke-linejoin:round; stroke-linecap:round }
-</style></defs>
-<rect width="1200" height="760" fill="#f5f8fc"/>
-<text x="45" y="52" class="title">fnc-power · Anschlussplan</text>
-<text x="45" y="84" class="small">KinCony DM4 · schematisch, keine räumliche Klemmenanordnung</text>
-<rect x="45" y="170" width="220" height="220" rx="12" fill="white" stroke="#b9c8d8" stroke-width="2"/>
-<text x="65" y="210" class="heading">Netzteil</text>
-<text x="65" y="240">24 V DC</text>
-<text x="185" y="279">+24 V</text><circle cx="265" cy="275" r="6" class="terminal"/>
-<text x="180" y="359">0 V / −</text><circle cx="265" cy="355" r="6" class="terminal"/>
-<rect x="470" y="170" width="310" height="350" rx="12" fill="#e6eef8" stroke="#91a9c4" stroke-width="2"/>
-<text x="495" y="211" class="heading">KinCony DM4</text>
-<text x="495" y="239">ESP32-S3 · 12 Bit</text>
-<text x="490" y="281">+12–24 V DC</text><circle cx="470" cy="275" r="6" class="terminal"/>
-<text x="490" y="361">GND</text><circle cx="470" cy="355" r="6" class="terminal"/>
-<text x="490" y="451">IN4 · Digitaleingang</text><circle cx="470" cy="445" r="6" class="terminal"/>
-<text x="620" y="313" class="heading">OUT4</text><circle cx="780" cy="305" r="6" class="terminal"/>
-<text x="620" y="338" class="small">0–10 V OUT</text>
-<text x="695" y="400">GND</text><circle cx="780" cy="395" r="6" class="terminal"/>
-<text x="495" y="490" class="small">OUT1–3 bleiben frei (0 V).</text>
-<rect x="945" y="170" width="220" height="350" rx="12" fill="white" stroke="#b9c8d8" stroke-width="2"/>
-<text x="970" y="212" class="heading">Dimmer</text>
-<text x="970" y="241" class="small">Steueranschlüsse</text>
-<circle cx="945" cy="305" r="6" class="terminal"/><text x="965" y="310">0–10 V IN / DIM+</text>
-<circle cx="945" cy="395" r="6" class="terminal"/><text x="965" y="400">Signal-GND / DIM−</text>
-<text x="970" y="450" class="small">Versorgung und LED</text>
-<text x="970" y="475" class="small">nach Dimmer-Handbuch</text>
-<path d="M271 275 H464" class="wire" stroke="#d1453b"/>
-<path d="M271 355 H464" class="wire" stroke="#2464a1"/>
-<path d="M310 355 V445 H345" class="wire" stroke="#2464a1"/>
-<circle cx="310" cy="355" r="6" fill="#2464a1"/>
-<circle cx="350" cy="445" r="5" class="terminal"/><circle cx="405" cy="445" r="5" class="terminal"/>
-<path d="M350 440 L397 417 M377 405 V391 M365 391 H389" class="wire" stroke="#172b40"/>
-<path d="M411 445 H464" class="wire" stroke="#2464a1"/>
-<text x="290" y="490" class="small">Taster (Schliesser)</text>
-<text x="290" y="514" class="small">unbetätigt offen</text>
-<path d="M786 305 H939" class="wire" stroke="#16866b"/>
-<text x="820" y="288" class="small">Signal</text>
-<path d="M786 395 H939" class="wire" stroke="#2464a1"/>
-<text x="810" y="423" class="small">Signalmasse</text>
-<text x="45" y="584" class="heading">Verdrahtung</text>
-<text x="45" y="615">1. +24 V → Versorgung · Netzteil 0 V → GND · IN4 → Taster → GND</text>
-<text x="45" y="645">2. OUT4 / DAC D → Dimmer 0–10 V IN · Ausgangs-GND → Dimmer Signal-GND</text>
-<text x="45" y="691" class="small">Taster potentialfrei anschliessen: keine +24 V an IN4. Kein zusätzlicher Pull-up erforderlich.</text>
-<text x="45" y="717" class="small">DIM+/DIM− sind beispielhafte Namen; Anschlussfreigabe und tatsächliche Klemmen am Dimmer prüfen.</text>
-<text x="45" y="742" class="small">LAN für OTA: RJ45 zum Router/Switch. Keine SD-Karte nötig. RTC-Batterie für Uhrpufferung.</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1770" height="940" viewBox="0 0 1770 940" role="img" aria-labelledby="title desc">
+<title id="title">FNC Power wiring diagram</title>
+<desc id="desc">24V orange and GND black supply the KinCony DM4. A blue and white normally open push button connects digital IN4 to input GND. OUT4 supplies a violet 0-10V dimming signal with black signal ground. Mains L, N and PE feed the 24V DC supply, which powers the DM4 and LED dimmer. The 24V and GND distribution branches are integrated into supply panel 1. Grey GND Dimmed is a separate net shown as short labelled stubs. All dimmer inputs are on the left; its outputs are on the right.</desc>
+<defs><linearGradient id="header" x2="1" y2="1"><stop stop-color="#1253a2"/><stop offset="1" stop-color="#173e77"/></linearGradient></defs>
+<rect width="1770" height="940" fill="#f2f6fb"/>
+<g font-family="Segoe UI, Arial, sans-serif" fill="#17324e">
+<text x="24" y="52" font-size="40" fill="#17324e" font-weight="700" text-anchor="start">FNC Power</text>
+<text x="265" y="52" font-size="33" fill="#17324e" font-weight="600" text-anchor="start">Wiring Diagram</text>
+<text x="1746" y="50" font-size="18" fill="#526b84" font-weight="400" text-anchor="end">KinCony DM4 | 24V DC | OUT4 + IN4</text>
+<text x="1746" y="83" font-size="17" fill="#526b84" font-weight="400" text-anchor="end">Functional connections - not physical terminal positions</text>
+<rect x="24" y="115" width="550" height="425" rx="12" fill="#fff" stroke="#d6e1ee"/>
+<rect x="24" y="115" width="550" height="52" rx="12" fill="url(#header)" stroke="none"/>
+<rect x="36" y="124" width="34" height="34" rx="8" fill="#fff" stroke="none"/>
+<text x="53" y="149" font-size="24" fill="#173e77" font-weight="700" text-anchor="middle">1</text>
+<text x="84" y="149" font-size="24" fill="#fff" font-weight="700" text-anchor="start">24V DC Supply</text>
+<g transform="translate(-5 0)">
+<rect x="110" y="210" width="150" height="250" rx="7" fill="#edf2f7" stroke="#9eafc4"/>
+<text x="185" y="315" font-size="24" fill="#17324e" font-weight="700" text-anchor="middle">24V</text>
+<text x="185" y="343" font-size="15" fill="#526b84" font-weight="400" text-anchor="middle">DC</text>
+<text x="48" y="195" font-size="17" fill="#17324e" font-weight="600" text-anchor="start">230V AC</text>
+<text x="48" y="258" font-size="16" fill="#17324e" font-weight="600" text-anchor="start">L</text>
+<polyline points="48,270 110,270" fill="none" stroke="#f2f6fb" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="48,270 110,270" fill="none" stroke="#87502e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="110" cy="270" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="48" y="318" font-size="16" fill="#17324e" font-weight="600" text-anchor="start">N</text>
+<polyline points="48,330 110,330" fill="none" stroke="#f2f6fb" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="48,330 110,330" fill="none" stroke="#1767d2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="110" cy="330" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="48" y="378" font-size="16" fill="#17324e" font-weight="600" text-anchor="start">PE</text>
+<polyline points="48,390 110,390" fill="none" stroke="#f2f6fb" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="48,390 110,390" fill="none" stroke="#efc526" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="110" cy="390" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="266" y="290" font-size="18" fill="#ed7b15" font-weight="600" text-anchor="start">24V DC</text>
+<polyline points="260,300 350,300" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="260,300 350,300" fill="none" stroke="#ed7b15" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,273 350,327" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,273 350,327" fill="none" stroke="#ed7b15" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="260" cy="300" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<polyline points="350,273 374,273" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,273 374,273" fill="none" stroke="#ed7b15" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="350" cy="273" r="5" fill="#ed7b15"/>
+<text x="386" y="279" font-size="18" fill="#17324e" font-weight="400" text-anchor="start">KinCony</text>
+<polyline points="350,300 374,300" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,300 374,300" fill="none" stroke="#ed7b15" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="350" cy="300" r="5" fill="#ed7b15"/>
+<text x="386" y="306" font-size="18" fill="#17324e" font-weight="400" text-anchor="start">LED Dimmer</text>
+<polyline points="350,327 374,327" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,327 374,327" fill="none" stroke="#ed7b15" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="350" cy="327" r="5" fill="#ed7b15"/>
+<text x="386" y="333" font-size="18" fill="#17324e" font-weight="400" text-anchor="start">FNC Tower Connector</text>
+<text x="266" y="400" font-size="18" fill="#202c38" font-weight="600" text-anchor="start">GND</text>
+<polyline points="260,410 350,410" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="260,410 350,410" fill="none" stroke="#202c38" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,383 350,437" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,383 350,437" fill="none" stroke="#202c38" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="260" cy="410" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<polyline points="350,383 374,383" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,383 374,383" fill="none" stroke="#202c38" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="350" cy="383" r="5" fill="#202c38"/>
+<text x="386" y="389" font-size="18" fill="#17324e" font-weight="400" text-anchor="start">KinCony</text>
+<polyline points="350,410 374,410" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,410 374,410" fill="none" stroke="#202c38" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="350" cy="410" r="5" fill="#202c38"/>
+<text x="386" y="416" font-size="18" fill="#17324e" font-weight="400" text-anchor="start">LED Dimmer</text>
+<polyline points="350,437 374,437" fill="none" stroke="#f2f6fb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="350,437 374,437" fill="none" stroke="#202c38" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="350" cy="437" r="5" fill="#202c38"/>
+<text x="386" y="443" font-size="18" fill="#17324e" font-weight="400" text-anchor="start">FNC Tower Connector</text>
+</g>
+<rect x="689" y="115" width="460" height="785" rx="12" fill="#fff" stroke="#d6e1ee"/>
+<rect x="689" y="115" width="460" height="52" rx="12" fill="url(#header)" stroke="none"/>
+<rect x="701" y="124" width="34" height="34" rx="8" fill="#fff" stroke="none"/>
+<text x="718" y="149" font-size="24" fill="#173e77" font-weight="700" text-anchor="middle">2</text>
+<text x="749" y="149" font-size="24" fill="#fff" font-weight="700" text-anchor="start">KinCony DM4</text>
+<rect x="705" y="203" width="190" height="218" rx="8" fill="#edf4fc" stroke="#d6e1ee"/>
+<text x="721" y="236" font-size="14" fill="#526b84" font-weight="700" text-anchor="start">POWER</text>
+<line x1="689" y1="260" x2="639" y2="260" stroke="#ed7b15" stroke-width="5" stroke-linecap="butt"/>
+<text x="664.0" y="250" font-size="15" fill="#ed7b15" font-weight="600" text-anchor="middle">24V</text>
+<text x="721" y="267" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">+24V DC</text>
+<circle cx="689" cy="260" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<line x1="689" y1="340" x2="639" y2="340" stroke="#202c38" stroke-width="5" stroke-linecap="butt"/>
+<text x="664.0" y="330" font-size="15" fill="#202c38" font-weight="600" text-anchor="middle">GND</text>
+<text x="721" y="347" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">GND</text>
+<circle cx="689" cy="340" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<rect x="943" y="203" width="190" height="218" rx="8" fill="#edf4fc" stroke="#d6e1ee"/>
+<text x="1117" y="236" font-size="14" fill="#526b84" font-weight="700" text-anchor="end">0-10V OUTPUTS</text>
+<text x="1117" y="277" font-size="20" fill="#17324e" font-weight="600" text-anchor="end">OUT4 / 0-10V</text>
+<polyline points="1133,270 1264,270" fill="none" stroke="#f2f6fb" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1133,270 1264,270" fill="none" stroke="#7737be" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1149" cy="270" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="1117" y="357" font-size="20" fill="#17324e" font-weight="600" text-anchor="end">Signal GND</text>
+<polyline points="1133,350 1264,350" fill="none" stroke="#f2f6fb" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="1133,350 1264,350" fill="none" stroke="#202c38" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1149" cy="350" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<rect x="705" y="585" width="190" height="190" rx="8" fill="#edf4fc" stroke="#d6e1ee"/>
+<text x="721" y="618" font-size="14" fill="#526b84" font-weight="700" text-anchor="start">DIGITAL INPUTS</text>
+<text x="721" y="657" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">IN4</text>
+<circle cx="689" cy="650" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="721" y="747" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">GND</text>
+<circle cx="689" cy="740" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<rect x="1264" y="115" width="370" height="480" rx="12" fill="#fff" stroke="#d6e1ee"/>
+<rect x="1264" y="115" width="370" height="52" rx="12" fill="url(#header)" stroke="none"/>
+<rect x="1276" y="124" width="34" height="34" rx="8" fill="#fff" stroke="none"/>
+<text x="1293" y="149" font-size="24" fill="#173e77" font-weight="700" text-anchor="middle">3</text>
+<text x="1324" y="149" font-size="24" fill="#fff" font-weight="700" text-anchor="start">LED Dimmer</text>
+<text x="1288" y="208" font-size="14" fill="#526b84" font-weight="700" text-anchor="start">CONTROL INPUT</text>
+<text x="1288" y="277" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">0-10V</text>
+<circle cx="1264" cy="270" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="1288" y="357" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">GND</text>
+<circle cx="1264" cy="350" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="1288" y="408" font-size="14" fill="#526b84" font-weight="700" text-anchor="start">POWER INPUT</text>
+<text x="1288" y="462" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">+24V</text>
+<line x1="1264" y1="455" x2="1214" y2="455" stroke="#ed7b15" stroke-width="5" stroke-linecap="butt"/>
+<text x="1239.0" y="445" font-size="15" fill="#ed7b15" font-weight="600" text-anchor="middle">24V</text>
+<circle cx="1264" cy="455" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="1288" y="542" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">GND</text>
+<line x1="1264" y1="535" x2="1214" y2="535" stroke="#202c38" stroke-width="5" stroke-linecap="butt"/>
+<text x="1239.0" y="525" font-size="15" fill="#202c38" font-weight="600" text-anchor="middle">GND</text>
+<circle cx="1264" cy="535" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="1610" y="208" font-size="14" fill="#526b84" font-weight="700" text-anchor="end">POWER OUTPUT</text>
+<text x="1610" y="277" font-size="20" fill="#17324e" font-weight="600" text-anchor="end">GND Dimmed</text>
+<line x1="1634" y1="270" x2="1744" y2="270" stroke="#858c94" stroke-width="5" stroke-linecap="butt"/>
+<text x="1689.0" y="260" font-size="15" fill="#858c94" font-weight="600" text-anchor="middle">GND Dimmed</text>
+<circle cx="1634" cy="270" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<rect x="1264" y="660" width="370" height="240" rx="12" fill="#fff" stroke="#d6e1ee"/>
+<rect x="1264" y="660" width="370" height="52" rx="12" fill="url(#header)" stroke="none"/>
+<rect x="1276" y="669" width="34" height="34" rx="8" fill="#fff" stroke="none"/>
+<text x="1293" y="694" font-size="24" fill="#173e77" font-weight="700" text-anchor="middle">5</text>
+<text x="1324" y="694" font-size="24" fill="#fff" font-weight="700" text-anchor="start">FNC Tower Connector</text>
+<text x="1288" y="757" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">24V</text>
+<line x1="1264" y1="750" x2="1214" y2="750" stroke="#ed7b15" stroke-width="5" stroke-linecap="butt"/>
+<text x="1239.0" y="740" font-size="15" fill="#ed7b15" font-weight="600" text-anchor="middle">24V</text>
+<circle cx="1264" cy="750" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="1288" y="817" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">GND</text>
+<line x1="1264" y1="810" x2="1214" y2="810" stroke="#202c38" stroke-width="5" stroke-linecap="butt"/>
+<text x="1239.0" y="800" font-size="15" fill="#202c38" font-weight="600" text-anchor="middle">GND</text>
+<circle cx="1264" cy="810" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<text x="1288" y="877" font-size="20" fill="#17324e" font-weight="600" text-anchor="start">GND Dimmed</text>
+<line x1="1264" y1="870" x2="1154" y2="870" stroke="#858c94" stroke-width="5" stroke-linecap="butt"/>
+<text x="1209.0" y="860" font-size="15" fill="#858c94" font-weight="600" text-anchor="middle">GND Dimmed</text>
+<circle cx="1264" cy="870" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<rect x="204" y="574" width="370" height="220" rx="12" fill="#fff" stroke="#d6e1ee"/>
+<rect x="204" y="574" width="370" height="52" rx="12" fill="url(#header)" stroke="none"/>
+<rect x="216" y="583" width="34" height="34" rx="8" fill="#fff" stroke="none"/>
+<text x="233" y="608" font-size="24" fill="#173e77" font-weight="700" text-anchor="middle">4</text>
+<text x="264" y="608" font-size="24" fill="#fff" font-weight="700" text-anchor="start">Push Button</text>
+<text x="437" y="703" font-size="24" fill="#17324e" font-weight="700" text-anchor="middle">NO</text>
+<polyline points="357,650 689,650" fill="none" stroke="#f2f6fb" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="357,650 689,650" fill="none" stroke="#1767d2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="357,740 689,740" fill="none" stroke="#8da0b3" stroke-width="8" stroke-linejoin="round"/>
+<polyline points="357,740 689,740" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="357,650 387,720" fill="none" stroke="#f2f6fb" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="357,650 387,720" fill="none" stroke="#202c38" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="322,695 346,695" fill="none" stroke="#f2f6fb" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="322,695 346,695" fill="none" stroke="#202c38" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="318,682 318,708" fill="none" stroke="#f2f6fb" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="318,682 318,708" fill="none" stroke="#202c38" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="357" cy="650" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="357" cy="740" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="574" cy="650" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="574" cy="740" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="689" cy="650" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="689" cy="740" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="1149" cy="270" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="1149" cy="350" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="1264" cy="270" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+<circle cx="1264" cy="350" r="6" fill="#fff" stroke="#17324e" stroke-width="2"/>
+</g></svg>
