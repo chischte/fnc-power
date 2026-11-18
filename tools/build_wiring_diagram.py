@@ -1,8 +1,15 @@
-"""Build the minimal, editable FNC Light wiring diagram (no external assets)."""
+"""Build the editable FNC Power wiring diagram with an embedded wiring photo."""
+import base64
+import struct
 from html import escape
 from pathlib import Path
 
 OUTPUT = Path(__file__).resolve().parents[1] / "docs" / "wiring.svg"
+EXAMPLE_IMAGE = OUTPUT.with_name("wiring_example.png")
+PAGE_WIDTH = 1770
+DIAGRAM_HEIGHT = 940
+EXAMPLE_HEADING_HEIGHT = 76
+PAGE_MARGIN = 24
 STUB_LENGTH = 50
 DIMMED_STUB_LENGTH = 110
 CONNECTION_FONT_SIZE = 20
@@ -13,12 +20,17 @@ COLORS = {"24v": "#ed7b15", "gnd": "#202c38", "blue": "#1767d2",
 
 class Diagram:
     def __init__(self):
-        self.elements = ['''<svg xmlns="http://www.w3.org/2000/svg" width="1770" height="940" viewBox="0 0 1770 940" role="img" aria-labelledby="title desc">
+        self.example_data = EXAMPLE_IMAGE.read_bytes()
+        image_width, image_height = struct.unpack(">II", self.example_data[16:24])
+        self.example_width = PAGE_WIDTH - 2 * PAGE_MARGIN
+        self.example_height = round(self.example_width * image_height / image_width)
+        page_height = DIAGRAM_HEIGHT + EXAMPLE_HEADING_HEIGHT + self.example_height + PAGE_MARGIN
+        self.elements = [f'''<svg xmlns="http://www.w3.org/2000/svg" width="{PAGE_WIDTH}" height="{page_height}" viewBox="0 0 {PAGE_WIDTH} {page_height}" role="img" aria-labelledby="title desc">''', '''
 <title id="title">FNC Power wiring diagram</title>
 <desc id="desc">24V orange and GND black supply the KinCony DM4. A blue and white normally open push button connects digital IN4 to input GND. OUT4 supplies a violet 0-10V dimming signal with black signal ground. Mains L, N and PE feed the 24V DC supply, which powers the DM4 and LED dimmer. The 24V and GND distribution branches are integrated into supply panel 1. Grey GND Dimmed is a separate net shown as short labelled stubs. All dimmer inputs are on the left; its outputs are on the right.</desc>
 <defs><linearGradient id="header" x2="1" y2="1"><stop stop-color="#1253a2"/><stop offset="1" stop-color="#173e77"/></linearGradient></defs>
-<rect width="1770" height="940" fill="#f2f6fb"/>
-<g font-family="Segoe UI, Arial, sans-serif" fill="#17324e">''']
+''', f'<rect width="{PAGE_WIDTH}" height="{page_height}" fill="#f2f6fb"/>',
+            '<g font-family="Segoe UI, Arial, sans-serif" fill="#17324e">']
 
     def text(self, x, y, value, size=18, color="#17324e", weight="400", anchor="start"):
         self.elements.append(f'<text x="{x}" y="{y}" font-size="{size}" fill="{color}" font-weight="{weight}" text-anchor="{anchor}">{escape(value)}</text>')
@@ -53,6 +65,19 @@ class Diagram:
         self.text(x, y, label, CONNECTION_FONT_SIZE, weight=CONNECTION_FONT_WEIGHT, anchor=anchor)
 
     def save(self):
+        self.elements.append(
+            f'<line x1="48" y1="{DIAGRAM_HEIGHT}" '
+            f'x2="{PAGE_WIDTH - 48}" y2="{DIAGRAM_HEIGHT}" '
+            'stroke="#9eafc4" stroke-width="2"/>'
+        )
+        self.text(PAGE_WIDTH / 2, DIAGRAM_HEIGHT + 48, "Wiring Example", 33,
+                  weight="600", anchor="middle")
+        encoded_image = base64.b64encode(self.example_data).decode("ascii")
+        self.elements.append(
+            f'<image x="{PAGE_MARGIN}" y="{DIAGRAM_HEIGHT + EXAMPLE_HEADING_HEIGHT}" '
+            f'width="{self.example_width}" height="{self.example_height}" '
+            f'href="data:image/png;base64,{encoded_image}"/>'
+        )
         self.elements.append("</g></svg>")
         OUTPUT.write_text("\n".join(self.elements), encoding="utf-8")
 
@@ -150,7 +175,7 @@ def draw_button(d):
 def main():
     diagram = Diagram()
     diagram.text(24, 52, "FNC Power", 40, weight="700")
-    diagram.text(265, 52, "Wiring Diagram", 33, weight="600")
+    diagram.text(PAGE_WIDTH / 2, 52, "Wiring Diagram", 33, weight="600", anchor="middle")
     diagram.text(1746, 50, "KinCony DM4 | 24V DC | OUT4 + IN4", 18, "#526b84", anchor="end")
     diagram.text(1746, 83, "Functional connections - not physical terminal positions", 17, "#526b84", anchor="end")
     draw_supply(diagram)

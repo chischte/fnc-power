@@ -160,7 +160,7 @@ class DevicePanel:
         self.poll()
 
     def build_controls(self, frame):
-        row = section(frame, "AUTOMATIC BRIGHTNESS")
+        row = section(frame, "BRIGHTNESS")
         self.spin = ttk.Spinbox(row, from_=0, to=100, textvariable=self.brightness, width=5, justify="center")
         self.spin.pack(side="left")
         ttk.Label(row, text="%", style="Muted.TLabel").pack(side="left", padx=8)
@@ -300,7 +300,7 @@ class DevicePanel:
     def show_status(self, status):
         address = status.get("_address") or self.devices.get(self.host.get(), "unknown")
         self.register_device(status["hostname"] + ".local", address)
-        mode = "service light" if status["service"] else "always off" if status["disabled"] else "automatic"
+        mode = "service light" if status["service"] else "always off" if status["disabled"] else "automatic mode"
         time = status["time"] if status["clockValid"] else "Clock invalid"
         self.mode_text.set("connected | " + mode)
         self.level_text.set(f"{status['output']:.0f} %")
