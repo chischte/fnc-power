@@ -9,6 +9,7 @@ public:
     void begin(std::function<bool()> prepareUpdate, const String& hostname);
     void setHostname(const String& hostname);
     void update();
+    String macAddress() const;
     bool updating() const { return updating_; }
     bool connected() const { return uint32_t(ethernetIp_) != 0 || uint32_t(wifiIp_) != 0; }
 private:

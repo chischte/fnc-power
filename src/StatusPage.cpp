@@ -71,10 +71,10 @@ void StatusPage::respond() {
         const auto s = status_();
         char json[700];
         snprintf(json, sizeof(json),
-            "{\"hostname\":\"%s\",\"brightness\":%d,\"default\":%d,\"maximum\":%d,"
+            "{\"hostname\":\"%s\",\"mac\":\"%s\",\"brightness\":%d,\"default\":%d,\"maximum\":%d,"
             "\"output\":%.1f,\"service\":%s,\"disabled\":%s,\"clockValid\":%s,"
             "\"time\":\"%02u:%02u:%02u\",\"on\":\"%02u:%02u\",\"off\":\"%02u:%02u\",\"hardwareOk\":%s,\"outputOk\":%s}",
-            s.hostname.c_str(), s.brightness, PowerConfig::brightnessPercent, PowerConfig::maxBrightnessPercent,
+            s.hostname.c_str(), s.mac.c_str(), s.brightness, PowerConfig::brightnessPercent, PowerConfig::maxBrightnessPercent,
             100.0 * s.output / s.outputMaximum, s.service ? "true" : "false",
             s.disabled ? "true" : "false", s.clockValid ? "true" : "false",
             s.time.hour, s.time.minute, s.time.second, s.onTime/60, s.onTime%60,

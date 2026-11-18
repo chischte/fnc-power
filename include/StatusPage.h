@@ -5,6 +5,7 @@
 
 struct DeviceStatus {
     String hostname;
+    String mac;
     int brightness = 0;
     ClockTime time{};
     bool clockValid = false;

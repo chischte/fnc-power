@@ -8,7 +8,7 @@ $shortcut = $shell.CreateShortcut($shortcutPath)
 $shortcut.TargetPath = $pythonExe
 $shortcut.Arguments = '"' + (Join-Path $PSScriptRoot 'light_viewer.py') + '"'
 $shortcut.WorkingDirectory = $projectRoot
-$shortcut.IconLocation = (Join-Path $projectRoot 'assets\light.ico') + ',0'
+$shortcut.IconLocation = (Join-Path $projectRoot 'assets\light-aligned.ico') + ',0'
 $shortcut.Description = 'KinCony light controllers on the local network'
 $shortcut.Save()
 Write-Output $shortcutPath

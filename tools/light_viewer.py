@@ -141,26 +141,27 @@ class DevicePanel:
         self.on_time = tk.StringVar()
         self.off_time = tk.StringVar()
         self.name = tk.StringVar()
+        self.renaming = False
         self.brightness = tk.IntVar(value=35)
         self.summary = tk.StringVar(value="Connecting ...")
         self.notice = tk.StringVar(value="")
         self.level_text = tk.StringVar(value="-- %")
-        self.mode_text = tk.StringVar(value="Connecting")
+        self.mode_text = tk.StringVar(value="connecting")
         self.level = tk.DoubleVar(value=0)
-        ttk.Label(frame, textvariable=self.host, font=("Segoe UI", 20, "bold")).pack(anchor="w")
+        self.build_hostname_editor(frame)
         ttk.Label(frame, textvariable=self.mode_text, style="Accent.TLabel").pack(anchor="w", pady=(6, 18))
         ttk.Label(frame, text="CURRENT BRIGHTNESS", style="Muted.TLabel").pack(anchor="w")
-        ttk.Label(frame, textvariable=self.level_text, font=("Segoe UI", 42, "bold")).pack(anchor="w")
+        ttk.Label(frame, textvariable=self.level_text, font=("Segoe UI", 34, "bold")).pack(anchor="w")
         ttk.Progressbar(frame, variable=self.level, maximum=100, style="Light.Horizontal.TProgressbar").pack(fill="x", pady=(4, 12))
         ttk.Label(frame, textvariable=self.summary, style="Muted.TLabel", justify="left").pack(anchor="w")
         self.build_controls(frame)
-        ttk.Label(frame, textvariable=self.notice, style="Muted.TLabel", wraplength=490).pack(anchor="w", pady=(12, 0))
+        ttk.Label(frame, textvariable=self.notice, style="Muted.TLabel", wraplength=400).pack(anchor="w", pady=(12, 0))
         window.after(100, self.drain)
         self.poll()
 
     def build_controls(self, frame):
         row = section(frame, "AUTOMATIC BRIGHTNESS")
-        self.spin = ttk.Spinbox(row, from_=0, to=100, textvariable=self.brightness, width=5)
+        self.spin = ttk.Spinbox(row, from_=0, to=100, textvariable=self.brightness, width=5, justify="center")
         self.spin.pack(side="left")
         ttk.Label(row, text="%", style="Muted.TLabel").pack(side="left", padx=8)
         ttk.Button(row, text="Save", style="Primary.TButton", command=self.save_brightness).pack(side="left", padx=(4, 8))
@@ -169,17 +170,43 @@ class DevicePanel:
         row = section(frame, "SCHEDULE")
         for label, variable in (("On", self.on_time), ("Off", self.off_time)):
             ttk.Label(row, text=label).pack(side="left", padx=(0, 8))
-            ttk.Entry(row, textvariable=variable, width=6).pack(side="left", padx=(0, 16))
+            ttk.Entry(row, textvariable=variable, width=6, justify="center").pack(side="left", padx=(0, 16))
         ttk.Button(row, text="Save", style="Primary.TButton", command=self.save_schedule).pack(side="left")
-        ttk.Label(frame, text="Local time | HH:MM | Matching times disable the schedule", style="Muted.TLabel").pack(anchor="w", pady=(8, 0))
-        row = section(frame, "DEVICE NAME")
-        ttk.Entry(row, textvariable=self.name).pack(side="left", fill="x", expand=True)
-        ttk.Button(row, text="Rename", command=self.rename).pack(side="left", padx=(8, 0))
-        ttk.Label(frame, text="Lowercase letters, numbers and hyphens | Local mDNS", style="Muted.TLabel").pack(anchor="w", pady=(8, 0))
-        row = section(frame, "SERVICE")
+        row = section(frame, "SERVICE LIGHT")
         self.service_button = ttk.Button(row, text="Start service light", command=self.toggle_service)
         self.service_button.pack(side="left")
         ttk.Label(row, text="Ends automatically after 10 minutes", style="Muted.TLabel").pack(side="left", padx=12)
+
+    def build_hostname_editor(self, frame):
+        header = ttk.Frame(frame)
+        header.pack(fill="x", anchor="w")
+        self.hostname_label = ttk.Label(header, textvariable=self.host,
+                                        font=("Segoe UI", 20, "bold"), cursor="hand2")
+        self.hostname_label.pack(side="left")
+        self.hostname_label.bind("<Button-1>", self.edit_hostname)
+        self.hostname_editor = ttk.Frame(header)
+        self.hostname_entry = ttk.Entry(self.hostname_editor, textvariable=self.name, width=14, justify="center",
+                                        font=("Segoe UI", 20, "bold"))
+        self.hostname_entry.pack(side="left")
+        ttk.Label(self.hostname_editor, text=".local", font=("Segoe UI", 20, "bold")).pack(side="left")
+        self.hostname_entry.bind("<Return>", self.rename)
+        self.hostname_entry.bind("<Escape>", self.cancel_hostname_edit)
+        self.hostname_entry.bind("<FocusOut>", self.rename)
+
+    def edit_hostname(self, event=None):
+        if self.renaming:
+            return
+        self.renaming = True
+        self.name.set(self.host.get().removesuffix(".local"))
+        self.hostname_label.pack_forget()
+        self.hostname_editor.pack(side="left")
+        self.hostname_entry.focus_set()
+        self.hostname_entry.selection_range(0, "end")
+
+    def cancel_hostname_edit(self, event=None):
+        self.renaming = False
+        self.hostname_editor.pack_forget()
+        self.hostname_label.pack(side="left")
 
     def submit(self, kind, host, command=None, value=""):
         future = self.pool.submit(request, self.devices.get(host, host), command, value)
@@ -203,12 +230,20 @@ class DevicePanel:
         self.notice.set("Saving ...")
         self.submit("saved", self.host.get().strip(), command, value)
 
-    def rename(self):
-        name = self.name.get().strip()
-        if not name or len(name) > 63 or name.startswith("-") or name.endswith("-") or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789-" for c in name):
-            messagebox.showerror("Invalid name", "Enter a DNS name using lowercase letters, numbers and hyphens.")
+    def rename(self, event=None):
+        if not self.renaming:
             return
-        self.command("name", name)
+        name = self.name.get().strip()
+        if not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", name):
+            # End editing before opening a modal to avoid recursive FocusOut events.
+            self.cancel_hostname_edit()
+            messagebox.showerror("Invalid name", "Use 1-63 lowercase letters, numbers or hyphens. The name must start and end with a letter or number.", parent=self.window)
+            self.edit_hostname()
+            self.name.set(name)
+            return
+        self.cancel_hostname_edit()
+        if name + ".local" != self.host.get():
+            self.command("name", name)
 
     def save_brightness(self):
         try:
@@ -250,8 +285,8 @@ class DevicePanel:
                 continue
             if kind == "error":
                 self.notice.set("No connection. Check device power and network.")
-                self.summary.set("Device unavailable | Display is not current")
-                self.mode_text.set("Offline")
+                self.summary.set("")
+                self.mode_text.set("offline")
                 self.level_text.set("-- %")
                 self.level.set(0)
             elif kind == "saved":
@@ -265,12 +300,12 @@ class DevicePanel:
     def show_status(self, status):
         address = status.get("_address") or self.devices.get(self.host.get(), "unknown")
         self.register_device(status["hostname"] + ".local", address)
-        mode = "Service" if status["service"] else "Always off" if status["disabled"] else "Automatic"
+        mode = "service light" if status["service"] else "always off" if status["disabled"] else "automatic"
         time = status["time"] if status["clockValid"] else "Clock invalid"
-        self.mode_text.set(mode + " | Connected")
-        self.level_text.set(f"{status['output']:.1f} %")
+        self.mode_text.set("connected | " + mode)
+        self.level_text.set(f"{status['output']:.0f} %")
         self.level.set(status["output"])
-        self.summary.set(f"Device time {time}  |  IP {address}\nSchedule {status['on']}-{status['off']}  |  Automatic {status['brightness']} %"
+        self.summary.set(f"Device time {time}  |  MAC {status.get('mac', 'unavailable')}  |  IP {address}"
                          + ("\nHardware error" if not status['hardwareOk'] or not status['outputOk'] else ""))
         if not self.name.get():
             self.name.set(status["hostname"])
@@ -292,15 +327,11 @@ class Viewer:
         self.events = queue.Queue()
         self.pool = concurrent.futures.ThreadPoolExecutor(max_workers=5)
         window.title("FNC Light")
-        window.geometry("1240x850")
-        window.minsize(1180, 820)
-        window.iconbitmap(str(ROOT / "assets" / "light.ico"))
+        window.geometry("980x660")
+        window.minsize(980, 660)
+        window.iconbitmap(str(ROOT / "assets" / "light-aligned.ico"))
         configure_theme(window)
-        header = ttk.Frame(window, style="Page.TFrame", padding=(28, 22, 28, 16))
-        header.pack(fill="x")
-        ttk.Label(header, text="FNC Light", style="Page.TLabel", font=("Segoe UI", 26, "bold")).pack(side="left")
-        ttk.Label(header, text="LIGHT CONTROL  /  LOCAL NETWORK", style="Page.TLabel", foreground=THEME["muted"], font=("Segoe UI", 10)).pack(side="right")
-        content = ttk.Frame(window, style="Page.TFrame", padding=(20, 0, 20, 20))
+        content = ttk.Frame(window, style="Page.TFrame", padding=(20, 16, 20, 20))
         content.pack(fill="both", expand=True)
         self.panels = []
         self.records = list(DEFAULT_DEVICES)

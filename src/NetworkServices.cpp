@@ -108,3 +108,7 @@ void NetworkServices::setHostname(const String& hostname) {
     if (mdnsStarted_) MDNS.end();
     mdnsStarted_ = false;
 }
+
+String NetworkServices::macAddress() const {
+    return uint32_t(ethernetIp_) != 0 ? ethernet_.macAddress() : WiFi.macAddress();
+}

@@ -349,3 +349,5 @@ Schaltgrenze verwenden die normale 60-Sekunden-Rampe.
 FNC Light zeigt fest zwei Geraetespalten. Der zweite DM4 wird nach der Einrichtung automatisch der zweiten Spalte zugeordnet; bis dahin wird er als offline angezeigt.
 
 FNC Light verwendet fest die Dark-Mode-Palette des fnc-fogger-Viewers. Die beiden Geraetezuordnungen bleiben lokal in viewer.devices.local.json erhalten; die Datei enthaelt keine Zugangsdaten.
+
+Im Viewer laesst sich der Geraetename per Klick auf die mDNS-Adresse oben bearbeiten: Enter oder Fokuswechsel speichert, Escape verwirft. Die Endung .local bleibt fest. Die Statuszeile zeigt die Netzwerk-MAC vor der IP-Adresse.

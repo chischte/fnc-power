@@ -100,6 +100,7 @@ private:
     DeviceStatus status() const {
         DeviceStatus result;
         result.hostname = settings_.hostname();
+        result.mac = network_.macAddress();
         result.brightness = settings_.brightness();
         result.time = clockTime_;
         result.clockValid = clockValid_;
